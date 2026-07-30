@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cat Clan Click</title>
+    <!-- Подключаем Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* --- Основные стили (без изменений) --- */
         * {
             margin: 0;
             padding: 0;
@@ -262,13 +264,15 @@
 </div>
 
 <script>
-    // --- Конфигурация Supabase (твои данные) ---
+    // --- Конфигурация Supabase ---
     const supabaseUrl = 'https://afaqzhatxdluszcssipzi.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYXF6aGF0eGRsdXpjc3NpcHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MTcxMjAsImV4cCI6MjEwMDk5MzEyMH0.l0yYOua6v1FZFYlyEKONlTYQZ9cy8qUaEKyM46T92p4';
 
-    // --- Функции работы с базой данных ---
+    // --- Функции работы с базой данных с расширенной отладкой ---
     async function saveUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
-        console.log('Попытка сохранения данных для:', telegramId, 'монет:', coins);
+        console.log('🟡 Попытка сохранения данных для:', telegramId, 'монет:', coins);
+        console.log('🔹 Отправка запроса в Supabase...');
+        
         try {
             const response = await fetch(`${supabaseUrl}/rest/v1/players`, {
                 method: 'POST',
@@ -285,22 +289,30 @@
                     referral_count: referralCount
                 })
             });
+
+            console.log('🔹 Запрос выполнен, статус:', response.status);
+
             if (!response.ok) {
+                console.error('🔴 Ответ сервера не OK:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('🔴 Текст ошибки:', errorText);
+                
                 if (response.status === 409) {
-                    console.log('Конфликт, обновляем данные...');
+                    console.log('🟡 Конфликт, обновляем данные...');
                     await updateUserData(telegramId, coins, clickPower, passiveIncome, referralCount);
                 } else {
                     throw new Error(`Ошибка сохранения: ${response.status}`);
                 }
             } else {
-                console.log('Данные успешно сохранены!');
+                console.log('✅ Данные успешно сохранены!');
             }
         } catch (error) {
-            console.error('Ошибка сохранения в Supabase:', error);
+            console.error('🔴 Ошибка сохранения в Supabase:', error);
         }
     }
 
     async function updateUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
+        console.log('🟡 Попытка обновления данных для:', telegramId);
         try {
             const response = await fetch(`${supabaseUrl}/rest/v1/players?telegram_id=eq.${telegramId}`, {
                 method: 'PATCH',
@@ -316,14 +328,19 @@
                     referral_count: referralCount
                 })
             });
-            if (!response.ok) throw new Error(`Ошибка обновления: ${response.status}`);
-            console.log('Данные обновлены!');
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('🔴 Ошибка обновления:', response.status, errorText);
+                throw new Error(`Ошибка обновления: ${response.status}`);
+            }
+            console.log('✅ Данные обновлены!');
         } catch (error) {
-            console.error('Ошибка обновления в Supabase:', error);
+            console.error('🔴 Ошибка обновления в Supabase:', error);
         }
     }
 
     async function loadUserData(telegramId) {
+        console.log('🟡 Загрузка данных для:', telegramId);
         try {
             const response = await fetch(`${supabaseUrl}/rest/v1/players?telegram_id=eq.${telegramId}`, {
                 headers: {
@@ -333,25 +350,28 @@
             });
             if (!response.ok) {
                 if (response.status === 404) {
-                    console.log('Игрок не найден, будет создан новый.');
+                    console.log('ℹ️ Игрок не найден, будет создан новый.');
                     return null;
                 }
+                const errorText = await response.text();
+                console.error('🔴 Ошибка загрузки:', response.status, errorText);
                 throw new Error(`Ошибка загрузки: ${response.status}`);
             }
             const data = await response.json();
             if (data && data.length > 0) {
-                console.log('Данные загружены:', data[0]);
+                console.log('✅ Данные загружены:', data[0]);
                 return data[0];
             }
             return null;
         } catch (error) {
-            console.error('Ошибка загрузки из Supabase:', error);
+            console.error('🔴 Ошибка загрузки из Supabase:', error);
             return null;
         }
     }
 
     // --- Основной код игры ---
     (function() {
+        console.log('🟢 Игра запущена');
         let tg = window.Telegram?.WebApp;
         let tgUser = null;
         let userId = 'test_user_123';
@@ -362,11 +382,14 @@
             if (tgUser) {
                 userId = tgUser.id.toString();
                 document.getElementById('tgStatus').textContent = `Привет, ${tgUser.first_name}! 🐱`;
+                console.log('🟢 Telegram пользователь:', tgUser.first_name, 'ID:', userId);
             } else {
                 document.getElementById('tgStatus').textContent = 'Игра в Telegram Mini App';
+                console.log('🟢 Игра в Telegram, но данные пользователя не получены');
             }
         } else {
             document.getElementById('tgStatus').textContent = 'Тестовый режим (вне Telegram)';
+            console.log('🟢 Игра запущена вне Telegram');
         }
 
         let state = {
@@ -381,21 +404,23 @@
         };
 
         async function initializeGame() {
-            console.log('Загрузка данных для пользователя:', userId);
+            console.log('🟡 Инициализация игры для пользователя:', userId);
             const playerData = await loadUserData(userId);
             if (playerData) {
                 state.coins = playerData.coins || 0;
                 state.clickPower = playerData.click_power || 1;
                 state.passiveIncome = playerData.passive_income || 0;
                 state.referralCount = playerData.referral_count || 0;
-                console.log('Состояние загружено:', state);
+                console.log('✅ Состояние загружено из Supabase:', state);
+            } else {
+                console.log('ℹ️ Используются значения по умолчанию');
             }
             updateUI();
             passiveIncomeLoop();
         }
 
         async function saveState() {
-            console.log('Сохранение состояния:', state);
+            console.log('🟡 Сохранение состояния:', state);
             await saveUserData(userId, state.coins, state.clickPower, state.passiveIncome, state.referralCount);
         }
 
@@ -440,6 +465,7 @@
         async function handleCatClick(e) {
             const gain = state.clickPower * (1 + state.multiplierLevel * 0.5);
             state.coins += Math.floor(gain);
+            console.log('🟡 Клик! +', Math.floor(gain), 'монет');
             await saveState();
             updateUI();
 
@@ -492,6 +518,7 @@
                     state.multiplierLevel++;
                     break;
             }
+            console.log('🟡 Куплено улучшение:', type);
             await saveState();
             updateUI();
             if (tg) tg.HapticFeedback.impactOccurred('medium');
@@ -507,6 +534,7 @@
         }
 
         function init() {
+            console.log('🟢 Инициализация UI...');
             const catArea = document.getElementById('catArea');
             catArea.addEventListener('click', handleCatClick);
             catArea.addEventListener('touchstart', function(e) {

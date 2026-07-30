@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cat Clan Click</title>
+    <!-- Подключение Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Иконка кота -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 16px;
+        }
+        .game-container {
+            max-width: 400px;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        .cat-area {
+            position: relative;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .cat-area:active {
+            transform: scale(0.92);
+        }
+        .cat-emoji {
+            font-size: 120px;
+            line-height: 1;
+            filter: drop-shadow(0 10px 20px rgba(255, 200, 0, 0.3));
+            transition: filter 0.2s ease;
+            display: block;
+        }
+        .cat-emoji:hover {
+            filter: drop-shadow(0 0 25px rgba(255, 200, 0, 0.6));
+        }
+        .click-effect {
+            position: absolute;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            pointer-events: none;
+            animation: floatUp 0.9s ease-out forwards;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+        }
+
+        .stats {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        .stat-value {
+            font-weight: 600;
+            font-size: 16px;
+            color: #ffd700;
+        }
+
+        .upgrade-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .upgrade-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 14px 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            text-align: center;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        .upgrade-btn:active {
+            transform: scale(0.95);
+        }
+        .upgrade-btn .price {
+            display: block;
+            font-size: 12px;
+            color: #ffd700;
+            margin-top: 4px;
+        }
+        .upgrade-btn .level {
+            display: block;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 2px;
+        }
+
+        .referral-section {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .referral-btn {
+            background: #2d3748;
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .referral-btn:active {
+            background: #4a5568;
+        }
+
+        .leaderboard-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2d3748;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 100;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .leaderboard-btn:active {
+            background: #4a5568;
+        }
+
+        .telegram-connect {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 12px;
+            opacity: 0.7;
+        }
+
+        /* Адаптация для маленьких экранов */
+        @media (max-width: 400px) {
+            .cat-emoji { font-size: 90px; }
+            .game-container { padding: 16px; }
+            .upgrade-grid { gap: 6px; }
+            .upgrade-btn { padding: 10px 4px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="app">
+    <h1 style="font-size: 24px; margin-bottom: 4px;">🐱 Cat Clan Click</h1>
+    <p style="color: #a0aec0; font-size: 14px; margin-bottom: 8px;">Кликни на кота, чтобы заработать монеты!</p>
+
+    <!-- Область кота -->
+    <div class="cat-area" id="catArea">
+        <span class="cat-emoji" id="catEmoji">🐈</span>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-label">🐟 Монеты</span>
+            <span class="stat-value" id="coinsDisplay">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">⚡ Сила клика</span>
+            <span class="stat-value" id="clickPowerDisplay">1</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">🏠 Пассивный доход</span>
+            <span class="stat-value" id="passiveIncomeDisplay">0</span>
+        </div>
+    </div>
+
+    <!-- Улучшения -->
+    <div style="text-align: left; margin-top: 8px;">
+        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">⬆ Улучшения</span>
+    </div>
+    <div class="upgrade-grid" id="upgradeGrid">
+        <button class="upgrade-btn" data-upgrade="click">
+            🐾 Сила клика
+            <span class="price">Цена: 10 🐟</span>
+            <span class="level">Уровень: 0</span>
+        </button>
+        <button class="upgrade-btn" data-upgrade="passive">
+            🏠 Пассивный доход
+            <span class="price">Цена: 50 🐟</span>
+            <span class="level">Уровень: 0</span>
+        </button>
+        <button class="upgrade-btn" data-upgrade="cat">
+            🐱 Новый кот
+            <span class="price">Цена: 200 🐟</span>
+            <span class="level">Куплено: 0</span>
+        </button>
+        <button class="upgrade-btn" data-upgrade="multiplier">
+            ✨ Множитель
+            <span class="price">Цена: 500 🐟</span>
+            <span class="level">Уровень: 0</span>
+        </button>
+    </div>
+
+    <!-- Реферальная система -->
+    <div class="referral-section">
+        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">👥 Приведи друга</span>
+        <p style="font-size: 13px; color: #a0aec0; margin-top: 4px;">Приглашай друзей и получай бонус 50 🐟 за каждого!</p>
+        <button class="referral-btn" id="referralBtn">📤 Пригласить друга</button>
+        <div style="margin-top: 8px; font-size: 13px;">
+            <span>Приглашено: </span>
+            <span id="referralCount" style="color: #ffd700; font-weight: 600;">0</span>
+        </div>
+    </div>
+
+    <!-- Кнопка таблицы лидеров -->
+    <button class="leaderboard-btn" id="leaderboardBtn">
+        🏆 Лидеры
+    </button>
+
+    <!-- Статус подключения к Telegram -->
+    <div class="telegram-connect" id="tgStatus">Подключение к Telegram...</div>
+</div>
+
+<script>
+    (function() {
+        // --- Инициализация Telegram Web App ---
+        let tg = window.Telegram?.WebApp;
+        let tgUser = null;
+        if (tg) {
+            tgUser = tg.initDataUnsafe?.user || null;
+            tg.expand(); // Разворачиваем приложение на весь экран
+            // Показываем, что подключились
+            const statusEl = document.getElementById('tgStatus');
+            if (tgUser) {
+                statusEl.textContent = `Привет, ${tgUser.first_name || 'Игрок'}! 🐱`;
+            } else {
+                statusEl.textContent = 'Игра в Telegram Mini App';
+            }
+        } else {
+            document.getElementById('tgStatus').textContent = 'Игра запущена вне Telegram (тестовый режим)';
+        }
+
+        // --- Состояние игры (сохраняется в localStorage) ---
+        let state = {
+            coins: parseInt(localStorage.getItem('catCoins')) || 0,
+            clickPower: parseInt(localStorage.getItem('catClickPower')) || 1,
+            passiveIncome: parseInt(localStorage.getItem('catPassiveIncome')) || 0,
+            catLevel: parseInt(localStorage.getItem('catCatLevel')) || 0,      // Для улучшения "Новый кот"
+            clickLevel: parseInt(localStorage.getItem('catClickLevel')) || 0,    // Для "Сила клика"
+            passiveLevel: parseInt(localStorage.getItem('catPassiveLevel')) || 0,
+            multiplierLevel: parseInt(localStorage.getItem('catMultiplierLevel')) || 0,
+            referralCount: parseInt(localStorage.getItem('catReferralCount')) || 0,
+            // Цены улучшений (базовые)
+            prices: {
+                click: 10,
+                passive: 50,
+                cat: 200,
+                multiplier: 500
+            }
+        };
+
+        // Коэффициенты роста цен
+        const priceMultiplier = {
+            click: 1.5,
+            passive: 1.6,
+            cat: 1.8,
+            multiplier: 1.7
+        };
+
+        // --- Функции сохранения и обновления UI ---
+        function saveState() {
+            localStorage.setItem('catCoins', state.coins);
+            localStorage.setItem('catClickPower', state.clickPower);
+            localStorage.setItem('catPassiveIncome', state.passiveIncome);
+            localStorage.setItem('catCatLevel', state.catLevel);
+            localStorage.setItem('catClickLevel', state.clickLevel);
+            localStorage.setItem('catPassiveLevel', state.passiveLevel);
+            localStorage.setItem('catMultiplierLevel', state.multiplierLevel);
+            localStorage.setItem('catReferralCount', state.referralCount);
+        }
+
+        function updateUI() {
+            document.getElementById('coinsDisplay').textContent = Math.floor(state.coins);
+            document.getElementById('clickPowerDisplay').textContent = state.clickPower;
+            document.getElementById('passiveIncomeDisplay').textContent = state.passiveIncome;
+
+            // Обновляем кнопки улучшений
+            const btns = document.querySelectorAll('.upgrade-btn');
+            btns.forEach(btn => {
+                const type = btn.dataset.upgrade;
+                let level = 0;
+                let price = state.prices[type] || 10;
+                switch(type) {
+                    case 'click': level = state.clickLevel; price = Math.floor(state.prices.click * Math.pow(priceMultiplier.click, state.clickLevel)); break;
+                    case 'passive': level = state.passiveLevel; price = Math.floor(state.prices.passive * Math.pow(priceMultiplier.passive, state.passiveLevel)); break;
+                    case 'cat': level = state.catLevel; price = Math.floor(state.prices.cat * Math.pow(priceMultiplier.cat, state.catLevel)); break;
+                    case 'multiplier': level = state.multiplierLevel; price = Math.floor(state.prices.multiplier * Math.pow(priceMultiplier.multiplier, state.multiplierLevel)); break;
+                }
+                const priceSpan = btn.querySelector('.price');
+                if (priceSpan) priceSpan.textContent = `Цена: ${price} 🐟`;
+                const levelSpan = btn.querySelector('.level');
+                if (levelSpan) {
+                    if (type === 'cat') {
+                        levelSpan.textContent = `Куплено: ${level}`;
+                    } else {
+                        levelSpan.textContent = `Уровень: ${level}`;
+                    }
+                }
+                // Делаем кнопку неактивной, если не хватает монет
+                btn.disabled = (state.coins < price);
+                btn.style.opacity = (state.coins < price) ? '0.5' : '1';
+            });
+
+            document.getElementById('referralCount').textContent = state.referralCount;
+        }
+
+        // --- Основной клик по коту ---
+        function handleCatClick(e) {
+            const baseGain = state.clickPower;
+            // Применяем множитель (если есть)
+            const multiplier = state.multiplierLevel > 0 ? (1 + state.multiplierLevel * 0.5) : 1;
+            const gain = Math.floor(baseGain * multiplier);
+            state.coins += gain;
+            saveState();
+            updateUI();
+
+            // Создаём "всплывающую" монетку
+            const catArea = document.getElementById('catArea');
+            const rect = catArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const el = document.createElement('div');
+            el.className = 'click-effect';
+            el.textContent = `+${gain}`;
+            el.style.left = (x - 20) + 'px';
+            el.style.top = (y - 20) + 'px';
+            el.style.position = 'absolute';
+            catArea.style.position = 'relative';
+            catArea.appendChild(el);
+            setTimeout(() => el.remove(), 900);
+
+            // Вибрация (если есть)
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        // --- Улучшения ---
+        function buyUpgrade(type) {
+            let price = state.prices[type] || 10;
+            switch(type) {
+                case 'click': price = Math.floor(state.prices.click * Math.pow(priceMultiplier.click, state.clickLevel)); break;
+                case 'passive': price = Math.floor(state.prices.passive * Math.pow(priceMultiplier.passive, state.passiveLevel)); break;
+                case 'cat': price = Math.floor(state.prices.cat * Math.pow(priceMultiplier.cat, state.catLevel)); break;
+                case 'multiplier': price = Math.floor(state.prices.multiplier * Math.pow(priceMultiplier.multiplier, state.multiplierLevel)); break;
+            }
+
+            if (state.coins < price) {
+                if (tg) tg.showAlert('Не хватает монет!');
+                return;
+            }
+
+            state.coins -= price;
+
+            switch(type) {
+                case 'click':
+                    state.clickLevel++;
+                    state.clickPower += 1; // +1 к силе клика
+                    break;
+                case 'passive':
+                    state.passiveLevel++;
+                    state.passiveIncome += 1; // +1 к пассивному доходу
+                    break;
+                case 'cat':
+                    state.catLevel++;
+                    // Нет прямого бонуса, просто коллекция
+                    break;
+                case 'multiplier':
+                    state.multiplierLevel++;
+                    break;
+            }
+
+            saveState();
+            updateUI();
+            if (tg) tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        // --- Пассивный доход (каждые 3 секунды) ---
+        function passiveIncomeLoop() {
+            if (state.passiveIncome > 0) {
+                state.coins += state.passiveIncome;
+                saveState();
+                updateUI();
+            }
+            setTimeout(passiveIncomeLoop, 3000);
+        }
+
+        // --- Реферальная система ---
+        function generateReferralLink() {
+            // В реальном проекте здесь должен быть бэкенд
+            let tgId = tgUser?.id || 'test';
+            let link = `https://t.me/ваш_бот_username?start=ref_${tgId}`;
+            return link;
+        }
+
+        function handleReferral() {
+            const link = generateReferralLink();
+            if (tg) {
+                tg.showAlert(`Ваша реферальная ссылка: ${link}`);
+            } else {
+                // Для теста
+                navigator.clipboard.writeText(link).then(() => {
+                    alert('Ссылка скопирована!');
+                }).catch(() => {
+                    prompt('Скопируйте ссылку вручную:', link);
+                });
+            }
+            // В реальном проекте здесь увеличивать referralCount через бэкенд
+            state.referralCount++;
+            saveState();
+            updateUI();
+        }
+
+        // --- Таблица лидеров (заглушка) ---
+        function showLeaderboard() {
+            // В реальном проекте запрос к бэкенду
+            if (tg) {
+                tg.showAlert('🏆 Таблица лидеров\n1. Ты — ' + Math.floor(state.coins) + ' 🐟\n2. Друг 1\n3. Друг 2');
+            } else {
+                alert('🏆 Таблица лидеров (тест)\n1. Ты — ' + Math.floor(state.coins) + ' 🐟');
+            }
+        }
+
+        // --- Инициализация ---
+        function init() {
+            // Обработчик клика по коту
+            const catArea = document.getElementById('catArea');
+            catArea.addEventListener('click', handleCatClick);
+            // Для мобильных touch
+            catArea.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
+                handleCatClick(fakeEvent);
+            });
+
+            // Обработчики улучшений
+            document.querySelectorAll('.upgrade-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const type = this.dataset.upgrade;
+                    buyUpgrade(type);
+                });
+            });
+
+            // Рефералка
+            document.getElementById('referralBtn').addEventListener('click', handleReferral);
+
+            // Лидерборд
+            document.getElementById('leaderboardBtn').addEventListener('click', showLeaderboard);
+
+            // Запускаем пассивный доход
+            passiveIncomeLoop();
+
+            // Обновляем UI
+            updateUI();
+
+            // Сохраняем данные при закрытии
+            window.addEventListener('beforeunload', saveState);
+
+            console.log('🐱 Cat Clan Click загружен!');
+        }
+
+        // Запуск после загрузки DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
+
+</body>
+</html>

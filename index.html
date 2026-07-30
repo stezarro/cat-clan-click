@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cat Clan Click</title>
-    <!-- Подключаем Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- Основные стили (без изменений) --- */
         * {
             margin: 0;
             padding: 0;
@@ -263,115 +261,28 @@
     <div class="telegram-connect" id="tgStatus">Подключение к Telegram...</div>
 </div>
 
-<script>
-    // --- Конфигурация Supabase ---
-    const supabaseUrl = 'https://afaqzhatxdluszcssipzi.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYXF6aGF0eGRsdXpjc3NpcHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MTcxMjAsImV4cCI6MjEwMDk5MzEyMH0.l0yYOua6v1FZFYlyEKONlTYQZ9cy8qUaEKyM46T92p4';
+<script type="module">
+    // --- Импорт Firebase SDK ---
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-    // --- Функции работы с базой данных с расширенной отладкой ---
-    async function saveUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
-        console.log('🟡 Попытка сохранения данных для:', telegramId, 'монет:', coins);
-        console.log('🔹 Отправка запроса в Supabase...');
-        
-        try {
-            const response = await fetch(`${supabaseUrl}/rest/v1/players`, {
-                method: 'POST',
-                headers: {
-                    'apikey': supabaseKey,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({
-                    telegram_id: telegramId,
-                    coins: coins,
-                    click_power: clickPower,
-                    passive_income: passiveIncome,
-                    referral_count: referralCount
-                })
-            });
+    // --- Твои ключи Firebase (вставлены) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCRJrBDDqKtcU2TQ2vIMRDvWY4CwXLkunw",
+        authDomain: "catclanclick.firebaseapp.com",
+        projectId: "catclanclick",
+        storageBucket: "catclanclick.firebasestorage.app",
+        messagingSenderId: "530270389222",
+        appId: "1:530270389222:web:12cdd77fbb30978cf2cc27",
+        measurementId: "G-JSD29KP67E"
+    };
 
-            console.log('🔹 Запрос выполнен, статус:', response.status);
-
-            if (!response.ok) {
-                console.error('🔴 Ответ сервера не OK:', response.status, response.statusText);
-                const errorText = await response.text();
-                console.error('🔴 Текст ошибки:', errorText);
-                
-                if (response.status === 409) {
-                    console.log('🟡 Конфликт, обновляем данные...');
-                    await updateUserData(telegramId, coins, clickPower, passiveIncome, referralCount);
-                } else {
-                    throw new Error(`Ошибка сохранения: ${response.status}`);
-                }
-            } else {
-                console.log('✅ Данные успешно сохранены!');
-            }
-        } catch (error) {
-            console.error('🔴 Ошибка сохранения в Supabase:', error);
-        }
-    }
-
-    async function updateUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
-        console.log('🟡 Попытка обновления данных для:', telegramId);
-        try {
-            const response = await fetch(`${supabaseUrl}/rest/v1/players?telegram_id=eq.${telegramId}`, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': supabaseKey,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({
-                    coins: coins,
-                    click_power: clickPower,
-                    passive_income: passiveIncome,
-                    referral_count: referralCount
-                })
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔴 Ошибка обновления:', response.status, errorText);
-                throw new Error(`Ошибка обновления: ${response.status}`);
-            }
-            console.log('✅ Данные обновлены!');
-        } catch (error) {
-            console.error('🔴 Ошибка обновления в Supabase:', error);
-        }
-    }
-
-    async function loadUserData(telegramId) {
-        console.log('🟡 Загрузка данных для:', telegramId);
-        try {
-            const response = await fetch(`${supabaseUrl}/rest/v1/players?telegram_id=eq.${telegramId}`, {
-                headers: {
-                    'apikey': supabaseKey,
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                if (response.status === 404) {
-                    console.log('ℹ️ Игрок не найден, будет создан новый.');
-                    return null;
-                }
-                const errorText = await response.text();
-                console.error('🔴 Ошибка загрузки:', response.status, errorText);
-                throw new Error(`Ошибка загрузки: ${response.status}`);
-            }
-            const data = await response.json();
-            if (data && data.length > 0) {
-                console.log('✅ Данные загружены:', data[0]);
-                return data[0];
-            }
-            return null;
-        } catch (error) {
-            console.error('🔴 Ошибка загрузки из Supabase:', error);
-            return null;
-        }
-    }
+    // --- Инициализация Firebase ---
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
     // --- Основной код игры ---
     (function() {
-        console.log('🟢 Игра запущена');
         let tg = window.Telegram?.WebApp;
         let tgUser = null;
         let userId = 'test_user_123';
@@ -403,27 +314,53 @@
             multiplierLevel: 0
         };
 
-        async function initializeGame() {
-            console.log('🟡 Инициализация игры для пользователя:', userId);
-            const playerData = await loadUserData(userId);
-            if (playerData) {
-                state.coins = playerData.coins || 0;
-                state.clickPower = playerData.click_power || 1;
-                state.passiveIncome = playerData.passive_income || 0;
-                state.referralCount = playerData.referral_count || 0;
-                console.log('✅ Состояние загружено из Supabase:', state);
-            } else {
-                console.log('ℹ️ Используются значения по умолчанию');
+        // --- Сохранение в Firebase ---
+        async function saveStateToFirebase() {
+            if (!userId) return;
+            try {
+                await set(ref(db, 'users/' + userId), {
+                    coins: state.coins,
+                    click_power: state.clickPower,
+                    passive_income: state.passiveIncome,
+                    referral_count: state.referralCount,
+                    click_level: state.clickLevel,
+                    passive_level: state.passiveLevel,
+                    cat_level: state.catLevel,
+                    multiplier_level: state.multiplierLevel,
+                    lastUpdated: Date.now()
+                });
+                console.log('✅ Данные сохранены в Firebase для:', userId);
+            } catch (error) {
+                console.error('🔴 Ошибка сохранения в Firebase:', error);
             }
-            updateUI();
-            passiveIncomeLoop();
         }
 
-        async function saveState() {
-            console.log('🟡 Сохранение состояния:', state);
-            await saveUserData(userId, state.coins, state.clickPower, state.passiveIncome, state.referralCount);
+        // --- Загрузка из Firebase ---
+        async function loadStateFromFirebase() {
+            if (!userId) return;
+            try {
+                const snapshot = await get(ref(db, 'users/' + userId));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    state.coins = data.coins || 0;
+                    state.clickPower = data.click_power || 1;
+                    state.passiveIncome = data.passive_income || 0;
+                    state.referralCount = data.referral_count || 0;
+                    state.clickLevel = data.click_level || 0;
+                    state.passiveLevel = data.passive_level || 0;
+                    state.catLevel = data.cat_level || 0;
+                    state.multiplierLevel = data.multiplier_level || 0;
+                    console.log('✅ Данные загружены из Firebase:', state);
+                } else {
+                    console.log('ℹ️ Игрок не найден, создаём нового...');
+                    await saveStateToFirebase();
+                }
+            } catch (error) {
+                console.error('🔴 Ошибка загрузки из Firebase:', error);
+            }
         }
 
+        // --- Обновление UI ---
         function updateUI() {
             document.getElementById('coinsDisplay').textContent = Math.floor(state.coins);
             document.getElementById('clickPowerDisplay').textContent = state.clickPower;
@@ -462,11 +399,11 @@
             });
         }
 
+        // --- Обработчик клика ---
         async function handleCatClick(e) {
             const gain = state.clickPower * (1 + state.multiplierLevel * 0.5);
             state.coins += Math.floor(gain);
-            console.log('🟡 Клик! +', Math.floor(gain), 'монет');
-            await saveState();
+            await saveStateToFirebase();
             updateUI();
 
             const catArea = document.getElementById('catArea');
@@ -487,6 +424,7 @@
             }
         }
 
+        // --- Покупка улучшений ---
         async function buyUpgrade(type) {
             const prices = {
                 click: Math.floor(10 * Math.pow(1.5, state.clickLevel)),
@@ -518,21 +456,22 @@
                     state.multiplierLevel++;
                     break;
             }
-            console.log('🟡 Куплено улучшение:', type);
-            await saveState();
+            await saveStateToFirebase();
             updateUI();
             if (tg) tg.HapticFeedback.impactOccurred('medium');
         }
 
+        // --- Пассивный доход ---
         function passiveIncomeLoop() {
             if (state.passiveIncome > 0) {
                 state.coins += state.passiveIncome;
-                saveState();
+                saveStateToFirebase();
                 updateUI();
             }
             setTimeout(passiveIncomeLoop, 3000);
         }
 
+        // --- Инициализация ---
         function init() {
             console.log('🟢 Инициализация UI...');
             const catArea = document.getElementById('catArea');
@@ -564,7 +503,7 @@
                     });
                 }
                 state.referralCount++;
-                saveState();
+                saveStateToFirebase();
                 updateUI();
             });
 
@@ -576,8 +515,11 @@
                 }
             });
 
-            window.addEventListener('beforeunload', saveState);
-            initializeGame();
+            window.addEventListener('beforeunload', saveStateToFirebase);
+            loadStateFromFirebase().then(() => {
+                updateUI();
+                passiveIncomeLoop();
+            });
         }
 
         document.addEventListener('DOMContentLoaded', init);

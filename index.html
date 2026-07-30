@@ -6,167 +6,258 @@
     <title>Cat Clan Click</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Общие стили */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(145deg, #2d1b1b 0%, #1a1a1a 100%);
+            background: #0f0f1a;
+            color: white;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            padding: 16px;
+            padding: 12px;
+            user-select: none;
         }
         .game-container {
-            max-width: 450px;
+            max-width: 420px;
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            text-align: center;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+            border-radius: 28px;
+            padding: 20px 16px 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.8);
+            position: relative;
         }
-        h1 {
+
+        /* --- Верхняя панель --- */
+        .top-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .coin-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .coin-icon {
             font-size: 28px;
-            margin-bottom: 4px;
         }
+        .coin-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #f7931a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+        .energy-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.06);
+            padding: 6px 14px;
+            border-radius: 30px;
+        }
+        .energy-icon {
+            font-size: 18px;
+        }
+        .energy-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8be9fd;
+        }
+        .energy-max {
+            font-size: 13px;
+            color: #6c7a89;
+        }
+
+        /* --- Прибыль в час --- */
+        .profit-hour {
+            text-align: center;
+            padding: 8px 0 12px;
+            font-size: 13px;
+            color: #6c7a89;
+        }
+        .profit-hour span {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* --- Кот (центр) --- */
         .cat-area {
             position: relative;
-            margin: 20px 0;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 16px 0;
+            cursor: pointer;
+            transition: transform 0.08s ease;
         }
         .cat-area:active {
-            transform: scale(0.92);
+            transform: scale(0.94);
         }
-        .cat-emoji {
-            width: 180px;
-            height: 180px;
+        .cat-area img {
+            width: 200px;
+            height: 200px;
             object-fit: contain;
-            filter: drop-shadow(0 10px 20px rgba(255, 200, 0, 0.3));
-            transition: filter 0.2s ease;
-            display: block;
-            animation: bounce 2s infinite ease-in-out, glow 1.5s infinite alternate;
+            filter: drop-shadow(0 10px 30px rgba(255, 200, 0, 0.15));
+            transition: filter 0.3s ease;
         }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .cat-area:active img {
+            filter: drop-shadow(0 10px 40px rgba(255, 200, 0, 0.4));
         }
-        @keyframes glow {
-            from { filter: drop-shadow(0 0 5px orange); }
-            to { filter: drop-shadow(0 0 20px gold); }
+
+        /* --- Прогресс-бар энергии --- */
+        .energy-bar-wrap {
+            background: rgba(255,255,255,0.06);
+            border-radius: 30px;
+            height: 12px;
+            margin: 6px 0 16px;
+            overflow: hidden;
+            position: relative;
         }
-        .click-effect {
+        .energy-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 30px;
+            transition: width 0.3s ease;
+        }
+        .energy-bar-text {
             position: absolute;
-            font-size: 28px;
-            font-weight: bold;
-            color: #ffd700;
-            pointer-events: none;
-            animation: floatUp 0.9s ease-out forwards;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 9px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
         }
 
-        .stats {
-            background: rgba(0,0,0,0.3);
-            border-radius: 20px;
-            padding: 16px;
-            margin: 16px 0;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-        .stat-label {
-            color: #a0aec0;
-            font-size: 14px;
-        }
-        .stat-value {
-            font-weight: 600;
-            font-size: 16px;
-            color: #ffb347;
-        }
-
-        .upgrade-grid {
+        /* --- Блоки бонусов --- */
+        .bonus-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 16px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 16px 0;
         }
-        .upgrade-btn {
-            background: rgba(255, 165, 0, 0.15);
-            border: 1px solid #ff8c00;
+        .bonus-item {
+            background: rgba(255,255,255,0.04);
             border-radius: 16px;
-            padding: 14px 8px;
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
+            padding: 10px 4px;
             text-align: center;
-            line-height: 1.3;
-            word-break: break-word;
+            border: 1px solid rgba(255,255,255,0.04);
         }
-        .upgrade-btn:active {
-            background: rgba(255, 165, 0, 0.3);
-            transform: scale(0.95);
-        }
-        .upgrade-btn .price {
+        .bonus-item .label {
+            font-size: 10px;
+            color: #6c7a89;
             display: block;
-            font-size: 12px;
+        }
+        .bonus-item .value {
+            font-size: 16px;
+            font-weight: 700;
             color: #ffd700;
-            margin-top: 4px;
-        }
-        .upgrade-btn .level {
-            display: block;
-            font-size: 11px;
-            color: #a0aec0;
             margin-top: 2px;
         }
-
-        .cats-collection {
-            margin-top: 20px;
-            padding: 16px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
+        .bonus-item .timer {
+            font-size: 11px;
+            color: #8be9fd;
+            margin-top: 2px;
+            display: block;
         }
-        .cats-grid {
+
+        /* --- Кнопка Ускорить --- */
+        .boost-btn-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 6px 0 18px;
+        }
+        .boost-btn {
+            background: linear-gradient(135deg, #f7931a, #ffd700);
+            border: none;
+            color: #0f0f1a;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 12px 40px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2);
+            letter-spacing: 0.5px;
+            width: 100%;
+            max-width: 200px;
+        }
+        .boost-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 12px rgba(255, 215, 0, 0.1);
+        }
+
+        /* --- Нижняя навигация --- */
+        .bottom-nav {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            gap: 6px;
-            margin-top: 10px;
+            gap: 4px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
         }
-        .cat-select {
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            padding: 6px 2px;
+        .nav-item {
             text-align: center;
+            padding: 6px 0;
             cursor: pointer;
             transition: all 0.2s ease;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #6c7a89;
+            font-weight: 500;
+        }
+        .nav-item .nav-icon {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.06);
+        }
+        .nav-item:active {
+            transform: scale(0.92);
+        }
+
+        /* --- Скрытые секции --- */
+        .section {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .section.active {
+            display: block;
+        }
+
+        .cats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .cat-select {
+            background: rgba(255,255,255,0.04);
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
             border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
             opacity: 0.4;
         }
         .cat-select.unlocked {
@@ -174,169 +265,340 @@
         }
         .cat-select.active {
             border-color: #ffd700;
-            background: rgba(255, 215, 0, 0.15);
+            background: rgba(255, 215, 0, 0.08);
         }
         .cat-select img {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
             display: block;
             margin: 0 auto;
         }
         .cat-select .cat-name {
-            font-size: 9px;
+            font-size: 11px;
             color: #a0aec0;
-            margin-top: 2px;
-            display: block;
+            margin-top: 4px;
         }
         .cat-select .cat-price {
-            font-size: 8px;
+            font-size: 10px;
             color: #ffd700;
         }
 
-        .referral-section {
-            margin-top: 20px;
-            padding: 16px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
+        /* --- Улучшения --- */
+        .upgrades-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
-        .referral-btn {
+        .upgrade-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 16px;
+            padding: 14px 10px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .upgrade-card:active {
+            transform: scale(0.96);
+        }
+        .upgrade-card .u-icon {
+            font-size: 28px;
+        }
+        .upgrade-card .u-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 6px 0 2px;
+        }
+        .upgrade-card .u-price {
+            font-size: 12px;
+            color: #ffd700;
+        }
+        .upgrade-card .u-level {
+            font-size: 11px;
+            color: #6c7a89;
+        }
+        .upgrade-card.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* --- Кнопка назад --- */
+        .back-btn {
+            background: rgba(255,255,255,0.06);
+            border: none;
+            color: #a0aec0;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background 0.2s ease;
+        }
+        .back-btn:active {
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* --- Друзья --- */
+        .friends-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        .friends-stats div {
+            text-align: center;
+        }
+        .friends-stats .num {
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        .friends-stats .lbl {
+            font-size: 12px;
+            color: #6c7a89;
+        }
+
+        .referral-link-box {
+            display: flex;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 10px 14px;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #a0aec0;
+            word-break: break-all;
+        }
+        .referral-link-box .copy-btn {
             background: #2d3748;
             border: none;
             color: white;
-            padding: 12px 20px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 14px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
             cursor: pointer;
-            transition: background 0.2s ease;
-            width: 100%;
-            margin-top: 10px;
+            flex-shrink: 0;
+            margin-left: 10px;
         }
-        .referral-btn:active {
+        .referral-link-box .copy-btn:active {
             background: #4a5568;
         }
 
-        .leaderboard-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #2d3748;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 18px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 100;
-            transition: background 0.2s ease;
+        /* --- Задания --- */
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+        }
+        .task-item .task-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
-        .leaderboard-btn:active {
+        .task-item .task-icon {
+            font-size: 24px;
+        }
+        .task-item .task-name {
+            font-size: 14px;
+        }
+        .task-item .task-reward {
+            font-size: 13px;
+            color: #ffd700;
+        }
+        .task-item .task-btn {
+            background: #2d3748;
+            border: none;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .task-item .task-btn:active {
             background: #4a5568;
         }
-        .telegram-connect {
-            font-size: 12px;
-            color: #a0aec0;
-            margin-top: 12px;
-            opacity: 0.7;
+        .task-item.done .task-btn {
+            background: #1a472a;
+            color: #7ddfa0;
         }
+
+        /* --- Адаптив --- */
         @media (max-width: 400px) {
-            .cat-emoji { width: 120px; height: 120px; }
-            .cats-grid { grid-template-columns: repeat(6, 1fr); }
-            .cat-select img { width: 30px; height: 30px; }
-            .game-container { padding: 16px; }
-            .upgrade-grid { gap: 6px; }
-            .upgrade-btn { padding: 10px 4px; font-size: 12px; }
+            .game-container { padding: 14px 10px 8px; }
+            .cat-area img { width: 150px; height: 150px; }
+            .coin-value { font-size: 22px; }
+            .energy-text { font-size: 14px; }
+            .bonus-grid { gap: 4px; }
+            .bonus-item { padding: 8px 2px; }
+            .bonus-item .value { font-size: 14px; }
+            .bottom-nav { font-size: 10px; }
+            .nav-item .nav-icon { font-size: 18px; }
+            .cats-grid { grid-template-columns: repeat(3, 1fr); }
+            .cat-select img { width: 50px; height: 50px; }
         }
     </style>
 </head>
 <body>
 
 <div class="game-container" id="app">
-    <h1>🐱 Cat Clan Click</h1>
-    <p style="color: #a0aec0; font-size: 14px; margin-bottom: 8px;">Кликни на кота, чтобы заработать монеты!</p>
+    <!-- Верхняя панель -->
+    <div class="top-panel">
+        <div class="coin-display">
+            <span class="coin-icon">🐟</span>
+            <span class="coin-value" id="coinsDisplay">0</span>
+        </div>
+        <div class="energy-display">
+            <span class="energy-icon">⚡</span>
+            <span class="energy-text" id="energyCurrent">1500</span>
+            <span class="energy-max">/ 1500</span>
+        </div>
+    </div>
 
+    <!-- Прибыль в час -->
+    <div class="profit-hour">
+        Прибыль в час: <span id="profitPerHour">0</span> 🐟
+    </div>
+
+    <!-- Кот -->
     <div class="cat-area" id="catArea">
-        <img src="images/cat1.png" alt="Cat" id="catEmoji" class="cat-emoji">
+        <img src="images/cat1.png" alt="Cat" id="catEmoji">
     </div>
 
-    <div class="stats">
-        <div class="stat-item">
-            <span class="stat-label">🐟 Монеты</span>
-            <span class="stat-value" id="coinsDisplay">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">⚡ Сила клика</span>
-            <span class="stat-value" id="clickPowerDisplay">1</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">🏠 Пассивный доход</span>
-            <span class="stat-value" id="passiveIncomeDisplay">0</span>
-        </div>
+    <!-- Прогресс-бар энергии -->
+    <div class="energy-bar-wrap">
+        <div class="energy-bar" id="energyBar" style="width:100%"></div>
+        <span class="energy-bar-text" id="energyBarText">1500/1500</span>
     </div>
 
-    <div style="text-align: left; margin-top: 8px;">
-        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">⬆ Улучшения</span>
-    </div>
-    <div class="upgrade-grid" id="upgradeGrid">
-        <button class="upgrade-btn" data-upgrade="click">
-            🐾 Сила клика
-            <span class="price">Цена: 10 🐟</span>
-            <span class="level">Уровень: 0</span>
-        </button>
-        <button class="upgrade-btn" data-upgrade="passive">
-            🏠 Пассивный доход
-            <span class="price">Цена: 50 🐟</span>
-            <span class="level">Уровень: 0</span>
-        </button>
-        <button class="upgrade-btn" data-upgrade="cat">
-            🐱 Новый кот
-            <span class="price">Цена: 200 🐟</span>
-            <span class="level">Куплено: 0</span>
-        </button>
-        <button class="upgrade-btn" data-upgrade="multiplier">
-            ✨ Множитель
-            <span class="price">Цена: 500 🐟</span>
-            <span class="level">Уровень: 0</span>
-        </button>
-    </div>
-
-    <div class="cats-collection">
-        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">🐱 Коллекция котов</span>
-        <div class="cats-grid" id="catsGrid">
-            <!-- Коты будут добавлены через JavaScript -->
+    <!-- Блоки бонусов -->
+    <div class="bonus-grid">
+        <div class="bonus-item">
+            <span class="label">Ежедневная награда</span>
+            <span class="value" id="dailyBonus">+50</span>
+            <span class="timer" id="dailyTimer">24:00</span>
+        </div>
+        <div class="bonus-item">
+            <span class="label">Ежедневный шифр</span>
+            <span class="value" id="cipherBonus">+20</span>
+            <span class="timer" id="cipherTimer">12:00</span>
+        </div>
+        <div class="bonus-item">
+            <span class="label">Комбо</span>
+            <span class="value" id="comboBonus">+100</span>
+            <span class="timer" id="comboTimer">06:00</span>
+        </div>
+        <div class="bonus-item">
+            <span class="label">Мини-игра</span>
+            <span class="value" id="miniGameBonus">+30</span>
+            <span class="timer" id="miniGameTimer">04:00</span>
         </div>
     </div>
 
-    <div class="referral-section">
-        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">👥 Приведи друга</span>
-        <p style="font-size: 13px; color: #a0aec0; margin-top: 4px;">Приглашай друзей и получай бонус 50 🐟 за каждого!</p>
-        <button class="referral-btn" id="referralBtn">📤 Пригласить друга</button>
-        <div style="margin-top: 8px; font-size: 13px;">
-            <span>Приглашено: </span>
-            <span id="referralCount" style="color: #ffd700; font-weight: 600;">0</span>
+    <!-- Кнопка Ускорить -->
+    <div class="boost-btn-wrap">
+        <button class="boost-btn" id="boostBtn">⚡ Ускорить</button>
+    </div>
+
+    <!-- Секции (переключаются через навигацию) -->
+    <div id="sectionCollection" class="section">
+        <button class="back-btn" data-section="main">← Назад</button>
+        <h3 style="margin-bottom:12px;">🐱 Коллекция котов</h3>
+        <div class="cats-grid" id="catsGrid"></div>
+    </div>
+
+    <div id="sectionUpgrades" class="section">
+        <button class="back-btn" data-section="main">← Назад</button>
+        <h3 style="margin-bottom:12px;">⬆ Улучшения</h3>
+        <div class="upgrades-grid" id="upgradesGrid">
+            <div class="upgrade-card" data-upgrade="click">
+                <div class="u-icon">🐾</div>
+                <div class="u-name">Сила клика</div>
+                <div class="u-price" id="priceClick">10 🐟</div>
+                <div class="u-level" id="levelClick">Уровень 0</div>
+            </div>
+            <div class="upgrade-card" data-upgrade="passive">
+                <div class="u-icon">🏠</div>
+                <div class="u-name">Пассивный доход</div>
+                <div class="u-price" id="pricePassive">50 🐟</div>
+                <div class="u-level" id="levelPassive">Уровень 0</div>
+            </div>
+            <div class="upgrade-card" data-upgrade="multiplier">
+                <div class="u-icon">✨</div>
+                <div class="u-name">Множитель</div>
+                <div class="u-price" id="priceMultiplier">500 🐟</div>
+                <div class="u-level" id="levelMultiplier">Уровень 0</div>
+            </div>
+            <div class="upgrade-card" data-upgrade="energy">
+                <div class="u-icon">⚡</div>
+                <div class="u-name">Макс. энергия</div>
+                <div class="u-price" id="priceEnergy">1000 🐟</div>
+                <div class="u-level" id="levelEnergy">Уровень 0</div>
+            </div>
         </div>
     </div>
 
-    <button class="leaderboard-btn" id="leaderboardBtn">
-        🏆 Лидеры
-    </button>
+    <div id="sectionFriends" class="section">
+        <button class="back-btn" data-section="main">← Назад</button>
+        <h3 style="margin-bottom:12px;">👥 Друзья</h3>
+        <div class="friends-stats">
+            <div>
+                <div class="num" id="referralCountDisplay">0</div>
+                <div class="lbl">Приглашено</div>
+            </div>
+            <div>
+                <div class="num" id="referralBonusDisplay">0</div>
+                <div class="lbl">Бонус 🐟</div>
+            </div>
+        </div>
+        <div class="referral-link-box">
+            <span id="referralLink">Загрузка...</span>
+            <button class="copy-btn" id="copyReferralBtn">Копировать</button>
+        </div>
+        <button class="referral-btn" id="referralBtn" style="margin-top:12px; width:100%; padding:12px; border-radius:30px; border:none; background:#2d3748; color:white; font-weight:600; font-size:14px; cursor:pointer;">📤 Пригласить друга</button>
+    </div>
 
-    <div class="telegram-connect" id="tgStatus">Подключение к Telegram...</div>
+    <div id="sectionTasks" class="section">
+        <button class="back-btn" data-section="main">← Назад</button>
+        <h3 style="margin-bottom:12px;">📋 Задания</h3>
+        <div id="tasksList"></div>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="nav-item active" data-section="main">
+            <span class="nav-icon">🏠</span> Главная
+        </div>
+        <div class="nav-item" data-section="collection">
+            <span class="nav-icon">🐱</span> Коты
+        </div>
+        <div class="nav-item" data-section="upgrades">
+            <span class="nav-icon">⬆</span> Улучш.
+        </div>
+        <div class="nav-item" data-section="friends">
+            <span class="nav-icon">👥</span> Друзья
+        </div>
+        <div class="nav-item" data-section="tasks">
+            <span class="nav-icon">📋</span> Задания
+        </div>
+        <div class="nav-item" data-section="airdrop">
+            <span class="nav-icon">🎁</span> AirDrop
+        </div>
+    </div>
+
+    <div class="telegram-connect" id="tgStatus" style="text-align:center; font-size:11px; color:#4a5568; margin-top:8px;">Подключение к Telegram...</div>
 </div>
 
 <script type="module">
-    // --- Импорт Firebase ---
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-    // --- Конфигурация Firebase ---
     const firebaseConfig = {
         apiKey: "AIzaSyCRJrBDDqKtcU2TQ2vIMRDvWY4CwXLkunw",
         authDomain: "catclanclick.firebaseapp.com",
@@ -350,7 +612,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- Массив с 6 котами ---
+    // --- Данные котов ---
     const cats = [
         { id: 1, name: 'Кот 1', image: 'images/cat1.png', price: 0 },
         { id: 2, name: 'Кот 2', image: 'images/cat2.png', price: 1000 },
@@ -358,6 +620,16 @@
         { id: 4, name: 'Кот 4', image: 'images/cat4.png', price: 100000 },
         { id: 5, name: 'Кот 5', image: 'images/cat5.png', price: 500000 },
         { id: 6, name: 'Кот 6', image: 'images/cat6.png', price: 1000000 }
+    ];
+
+    // --- Задания ---
+    const tasks = [
+        { id: 1, icon: '🐟', name: 'Накопить 1000 монет', reward: 100, check: s => s.coins >= 1000 },
+        { id: 2, icon: '🐟', name: 'Накопить 10 000 монет', reward: 500, check: s => s.coins >= 10000 },
+        { id: 3, icon: '🐟', name: 'Накопить 100 000 монет', reward: 2000, check: s => s.coins >= 100000 },
+        { id: 4, icon: '🐱', name: 'Открыть Кота 2', reward: 300, check: s => s.coins >= 1000 },
+        { id: 5, icon: '🐱', name: 'Открыть Кота 3', reward: 800, check: s => s.coins >= 10000 },
+        { id: 6, icon: '👥', name: 'Пригласить 5 друзей', reward: 500, check: s => s.referralCount >= 5 }
     ];
 
     // --- Основной код ---
@@ -372,17 +644,17 @@
             if (tgUser) {
                 userId = tgUser.id.toString();
                 document.getElementById('tgStatus').textContent = `Привет, ${tgUser.first_name}! 🐱`;
-                console.log('🟢 Telegram пользователь:', tgUser.first_name, 'ID:', userId);
             } else {
                 document.getElementById('tgStatus').textContent = 'Игра в Telegram Mini App';
-                console.log('🟢 Игра в Telegram, но данные пользователя не получены');
             }
         } else {
             document.getElementById('tgStatus').textContent = 'Тестовый режим (вне Telegram)';
-            console.log('🟢 Игра запущена вне Telegram');
         }
 
-        // --- Состояние игры ---
+        // --- Состояние ---
+        const MAX_ENERGY = 1500;
+        const ENERGY_REGEN_RATE = 5; // в минуту
+
         let state = {
             coins: 0,
             clickPower: 1,
@@ -390,32 +662,59 @@
             referralCount: 0,
             clickLevel: 0,
             passiveLevel: 0,
-            catLevel: 0,
             multiplierLevel: 0,
-            selectedCat: 1 // ID текущего кота
+            energyLevel: 0,
+            selectedCat: 1,
+            energy: MAX_ENERGY,
+            lastEnergyUpdate: Date.now(),
+            completedTasks: []
         };
 
-        // --- Функция для проверки, открыт ли кот ---
-        function isCatUnlocked(cat) {
-            return state.coins >= cat.price;
+        // --- DOM ссылки ---
+        const $ = id => document.getElementById(id);
+        const coinsDisplay = $('coinsDisplay');
+        const energyCurrent = $('energyCurrent');
+        const energyBar = $('energyBar');
+        const energyBarText = $('energyBarText');
+        const profitPerHour = $('profitPerHour');
+        const catEmoji = $('catEmoji');
+        const catArea = $('catArea');
+
+        // --- Энергия ---
+        function getMaxEnergy() {
+            return MAX_ENERGY + state.energyLevel * 100;
         }
 
-        // --- Функция для смены кота ---
-        async function selectCat(catId) {
-            const cat = cats.find(c => c.id === catId);
-            if (!cat) return;
-            if (!isCatUnlocked(cat)) {
-                alert(`Этот кот открывается за ${cat.price} монет!`);
-                return;
-            }
-            state.selectedCat = catId;
-            document.getElementById('catEmoji').src = cat.image;
-            await saveStateToFirebase();
-            renderCats();
+        function regenEnergy() {
+            const now = Date.now();
+            const maxE = getMaxEnergy();
+            const elapsed = (now - state.lastEnergyUpdate) / 1000 / 60; // минуты
+            const gained = elapsed * ENERGY_REGEN_RATE;
+            state.energy = Math.min(maxE, state.energy + gained);
+            state.lastEnergyUpdate = now;
+            updateEnergyUI();
         }
 
-        // --- Сохранение в Firebase ---
-        async function saveStateToFirebase() {
+        function updateEnergyUI() {
+            const maxE = getMaxEnergy();
+            const current = Math.floor(state.energy);
+            energyCurrent.textContent = current;
+            energyBarText.textContent = `${current}/${maxE}`;
+            energyBar.style.width = `${(current / maxE) * 100}%`;
+        }
+
+        function spendEnergy(amount = 1) {
+            const maxE = getMaxEnergy();
+            regenEnergy();
+            if (state.energy < amount) return false;
+            state.energy = Math.max(0, state.energy - amount);
+            state.lastEnergyUpdate = Date.now();
+            updateEnergyUI();
+            return true;
+        }
+
+        // --- Сохранение ---
+        async function saveState() {
             if (!userId) return;
             try {
                 await set(ref(db, 'users/' + userId), {
@@ -425,238 +724,165 @@
                     referral_count: state.referralCount,
                     click_level: state.clickLevel,
                     passive_level: state.passiveLevel,
-                    cat_level: state.catLevel,
                     multiplier_level: state.multiplierLevel,
+                    energy_level: state.energyLevel,
                     selected_cat: state.selectedCat,
-                    lastUpdated: Date.now()
+                    energy: state.energy,
+                    last_energy_update: state.lastEnergyUpdate,
+                    completed_tasks: state.completedTasks
                 });
-                console.log('✅ Данные сохранены в Firebase');
-            } catch (error) {
-                console.error('🔴 Ошибка сохранения:', error);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // --- Загрузка из Firebase ---
-        async function loadStateFromFirebase() {
+        async function loadState() {
             if (!userId) return;
             try {
-                const snapshot = await get(ref(db, 'users/' + userId));
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
+                const snap = await get(ref(db, 'users/' + userId));
+                if (snap.exists()) {
+                    const data = snap.val();
                     state.coins = data.coins || 0;
                     state.clickPower = data.click_power || 1;
                     state.passiveIncome = data.passive_income || 0;
                     state.referralCount = data.referral_count || 0;
                     state.clickLevel = data.click_level || 0;
                     state.passiveLevel = data.passive_level || 0;
-                    state.catLevel = data.cat_level || 0;
                     state.multiplierLevel = data.multiplier_level || 0;
+                    state.energyLevel = data.energy_level || 0;
                     state.selectedCat = data.selected_cat || 1;
-                    console.log('✅ Данные загружены');
-                } else {
-                    console.log('ℹ️ Новый игрок');
-                    await saveStateToFirebase();
+                    state.energy = data.energy || getMaxEnergy();
+                    state.lastEnergyUpdate = data.last_energy_update || Date.now();
+                    state.completedTasks = data.completed_tasks || [];
                 }
-            } catch (error) {
-                console.error('🔴 Ошибка загрузки:', error);
-            }
-        }
-
-        // --- Рендер коллекции котов ---
-        function renderCats() {
-            const grid = document.getElementById('catsGrid');
-            grid.innerHTML = '';
-            cats.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = 'cat-select';
-                if (isCatUnlocked(cat)) {
-                    div.classList.add('unlocked');
-                }
-                if (state.selectedCat === cat.id) {
-                    div.classList.add('active');
-                }
-                div.innerHTML = `
-                    <img src="${cat.image}" alt="${cat.name}">
-                    <span class="cat-name">${cat.name}</span>
-                    <span class="cat-price">${cat.price > 0 ? cat.price + ' 🐟' : 'Старт'}</span>
-                `;
-                div.addEventListener('click', () => selectCat(cat.id));
-                grid.appendChild(div);
-            });
+            } catch (e) { console.error(e); }
         }
 
         // --- Обновление UI ---
         function updateUI() {
-            document.getElementById('coinsDisplay').textContent = Math.floor(state.coins);
-            document.getElementById('clickPowerDisplay').textContent = state.clickPower;
-            document.getElementById('passiveIncomeDisplay').textContent = state.passiveIncome;
-            document.getElementById('referralCount').textContent = state.referralCount;
+            coinsDisplay.textContent = Math.floor(state.coins);
+            profitPerHour.textContent = state.passiveIncome * 60;
 
-            // Проверяем, не открылся ли новый кот
             const currentCat = cats.find(c => c.id === state.selectedCat);
-            if (currentCat && isCatUnlocked(currentCat)) {
-                document.getElementById('catEmoji').src = currentCat.image;
-            }
+            if (currentCat) catEmoji.src = currentCat.image;
 
-            const btns = document.querySelectorAll('.upgrade-btn');
-            const prices = {
+            // Улучшения
+            const p = {
                 click: Math.floor(10 * Math.pow(1.5, state.clickLevel)),
                 passive: Math.floor(50 * Math.pow(1.6, state.passiveLevel)),
-                cat: Math.floor(200 * Math.pow(1.8, state.catLevel)),
-                multiplier: Math.floor(500 * Math.pow(1.7, state.multiplierLevel))
+                multiplier: Math.floor(500 * Math.pow(1.7, state.multiplierLevel)),
+                energy: Math.floor(1000 * Math.pow(1.8, state.energyLevel))
             };
-            btns.forEach(btn => {
-                const type = btn.dataset.upgrade;
-                const price = prices[type] || 10;
-                const priceSpan = btn.querySelector('.price');
-                if (priceSpan) priceSpan.textContent = `Цена: ${price} 🐟`;
-                const levelSpan = btn.querySelector('.level');
-                if (levelSpan) {
-                    let level = 0;
-                    switch(type) {
-                        case 'click': level = state.clickLevel; break;
-                        case 'passive': level = state.passiveLevel; break;
-                        case 'cat': level = state.catLevel; break;
-                        case 'multiplier': level = state.multiplierLevel; break;
-                    }
-                    if (type === 'cat') {
-                        levelSpan.textContent = `Куплено: ${level}`;
-                    } else {
-                        levelSpan.textContent = `Уровень: ${level}`;
-                    }
+            $('priceClick').textContent = `${p.click} 🐟`;
+            $('levelClick').textContent = `Уровень ${state.clickLevel}`;
+            $('pricePassive').textContent = `${p.passive} 🐟`;
+            $('levelPassive').textContent = `Уровень ${state.passiveLevel}`;
+            $('priceMultiplier').textContent = `${p.multiplier} 🐟`;
+            $('levelMultiplier').textContent = `Уровень ${state.multiplierLevel}`;
+            $('priceEnergy').textContent = `${p.energy} 🐟`;
+            $('levelEnergy').textContent = `Уровень ${state.energyLevel}`;
+
+            // Карточки улучшений
+            document.querySelectorAll('.upgrade-card').forEach(card => {
+                const type = card.dataset.upgrade;
+                const price = p[type] || 999999;
+                if (state.coins < price) {
+                    card.classList.add('disabled');
+                } else {
+                    card.classList.remove('disabled');
                 }
-                btn.disabled = (state.coins < price);
-                btn.style.opacity = (state.coins < price) ? '0.5' : '1';
             });
 
-            renderCats();
-        }
-
-        // --- Обработчик клика ---
-        async function handleCatClick(e) {
-            const gain = state.clickPower * (1 + state.multiplierLevel * 0.5);
-            state.coins += Math.floor(gain);
-            await saveStateToFirebase();
-            updateUI();
-
-            const catArea = document.getElementById('catArea');
-            const rect = catArea.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const el = document.createElement('div');
-            el.className = 'click-effect';
-            el.textContent = `+${Math.floor(gain)}`;
-            el.style.left = (x - 20) + 'px';
-            el.style.top = (y - 20) + 'px';
-            el.style.position = 'absolute';
-            catArea.appendChild(el);
-            setTimeout(() => el.remove(), 900);
-
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        }
-
-        // --- Покупка улучшений ---
-        async function buyUpgrade(type) {
-            const prices = {
-                click: Math.floor(10 * Math.pow(1.5, state.clickLevel)),
-                passive: Math.floor(50 * Math.pow(1.6, state.passiveLevel)),
-                cat: Math.floor(200 * Math.pow(1.8, state.catLevel)),
-                multiplier: Math.floor(500 * Math.pow(1.7, state.multiplierLevel))
-            };
-            const price = prices[type] || 10;
-
-            if (state.coins < price) {
-                if (tg) tg.showAlert('Не хватает монет!');
-                return;
+            // Коллекция котов
+            const grid = $('catsGrid');
+            if (grid) {
+                grid.innerHTML = '';
+                cats.forEach(cat => {
+                    const div = document.createElement('div');
+                    div.className = 'cat-select';
+                    const unlocked = state.coins >= cat.price;
+                    if (unlocked) div.classList.add('unlocked');
+                    if (state.selectedCat === cat.id) div.classList.add('active');
+                    div.innerHTML = `
+                        <img src="${cat.image}" alt="${cat.name}">
+                        <div class="cat-name">${cat.name}</div>
+                        <div class="cat-price">${cat.price > 0 ? cat.price + ' 🐟' : 'Старт'}</div>
+                    `;
+                    div.addEventListener('click', async () => {
+                        if (state.coins >= cat.price) {
+                            state.selectedCat = cat.id;
+                            await saveState();
+                            updateUI();
+                        } else {
+                            if (tg) tg.showAlert(`Нужно ${cat.price} монет!`);
+                        }
+                    });
+                    grid.appendChild(div);
+                });
             }
 
-            state.coins -= price;
-            switch(type) {
-                case 'click':
-                    state.clickLevel++;
-                    state.clickPower += 1;
-                    break;
-                case 'passive':
-                    state.passiveLevel++;
-                    state.passiveIncome += 1;
-                    break;
-                case 'cat':
-                    state.catLevel++;
-                    break;
-                case 'multiplier':
-                    state.multiplierLevel++;
-                    break;
-            }
-            await saveStateToFirebase();
-            updateUI();
-            if (tg) tg.HapticFeedback.impactOccurred('medium');
+            // Друзья
+            $('referralCountDisplay').textContent = state.referralCount;
+            $('referralBonusDisplay').textContent = state.referralCount * 50;
+            const link = `https://t.me/catclanclick_bot?start=ref_${userId}`;
+            $('referralLink').textContent = link;
+
+            // Задания
+            renderTasks();
+
+            updateEnergyUI();
         }
 
-        // --- Пассивный доход ---
-        function passiveIncomeLoop() {
-            if (state.passiveIncome > 0) {
-                state.coins += state.passiveIncome;
-                saveStateToFirebase();
-                updateUI();
-            }
-            setTimeout(passiveIncomeLoop, 3000);
-        }
-
-        // --- Инициализация ---
-        function init() {
-            console.log('🟢 Инициализация UI...');
-            const catArea = document.getElementById('catArea');
-            catArea.addEventListener('click', handleCatClick);
-            catArea.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                const fakeEvent = { clientX: touch.clientX, clientY: touch.clientY };
-                handleCatClick(fakeEvent);
+        // --- Задания ---
+        function renderTasks() {
+            const container = $('tasksList');
+            if (!container) return;
+            container.innerHTML = '';
+            tasks.forEach(task => {
+                const done = state.completedTasks.includes(task.id);
+                const canComplete = !done && task.check(state);
+                const div = document.createElement('div');
+                div.className = `task-item${done ? ' done' : ''}`;
+                div.innerHTML = `
+                    <div class="task-info">
+                        <span class="task-icon">${task.icon}</span>
+                        <span class="task-name">${task.name}</span>
+                    </div>
+                    <div>
+                        <span class="task-reward">+${task.reward} 🐟</span>
+                        <button class="task-btn" data-task-id="${task.id}" ${done || !canComplete ? 'disabled' : ''}>
+                            ${done ? '✅ Выполнено' : canComplete ? 'Забрать' : '🔒'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
             });
 
-            document.querySelectorAll('.upgrade-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const type = this.dataset.upgrade;
-                    buyUpgrade(type);
+            container.querySelectorAll('.task-btn[data-task-id]').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const id = parseInt(this.dataset.taskId);
+                    const task = tasks.find(t => t.id === id);
+                    if (!task || state.completedTasks.includes(id)) return;
+                    if (!task.check(state)) return;
+                    state.completedTasks.push(id);
+                    state.coins += task.reward;
+                    await saveState();
+                    updateUI();
+                    if (tg) tg.HapticFeedback.impactOccurred('medium');
                 });
             });
-
-            document.getElementById('referralBtn').addEventListener('click', function() {
-                const link = `https://t.me/catclanclick_bot?start=ref_${userId}`;
-                if (tg) {
-                    tg.showAlert(`Ваша реферальная ссылка: ${link}`);
-                } else {
-                    navigator.clipboard.writeText(link).then(() => {
-                        alert('Ссылка скопирована!');
-                    }).catch(() => {
-                        prompt('Скопируйте ссылку вручную:', link);
-                    });
-                }
-                state.referralCount++;
-                saveStateToFirebase();
-                updateUI();
-            });
-
-            document.getElementById('leaderboardBtn').addEventListener('click', function() {
-                if (tg) {
-                    tg.showAlert('🏆 Таблица лидеров\n1. Ты — ' + Math.floor(state.coins) + ' 🐟');
-                } else {
-                    alert('🏆 Таблица лидеров (тест)\n1. Ты — ' + Math.floor(state.coins) + ' 🐟');
-                }
-            });
-
-            window.addEventListener('beforeunload', saveStateToFirebase);
-            loadStateFromFirebase().then(() => {
-                updateUI();
-                passiveIncomeLoop();
-            });
         }
 
-        document.addEventListener('DOMContentLoaded', init);
-    })();
-</script>
-</body>
-</html>
+        // --- Клик по коту ---
+        async function handleCatClick(e) {
+            if (!spendEnergy(1)) {
+                if (tg) tg.showAlert('Нет энергии! Подождите восстановления.');
+                return;
+            }
+            const gain = state.clickPower * (1 + state.multiplierLevel * 0.5);
+            state.coins += gain;
+            await saveState();
+            updateUI();
+
+            // Визуальный эффект
+            const rect = catArea.getBoundingClientRect();
+            const x = (e.clientX || e.touches?.[0]?.clientX || 0) - rect.left;
+            const y = (e.clientY || e.touches?.[0]?.

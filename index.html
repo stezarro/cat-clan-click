@@ -6,6 +6,7 @@
     <title>Cat Clan Click</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Общие стили */
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +23,7 @@
             padding: 16px;
         }
         .game-container {
-            max-width: 400px;
+            max-width: 450px;
             width: 100%;
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
@@ -32,6 +33,10 @@
             border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
         .cat-area {
             position: relative;
             margin: 20px 0;
@@ -39,13 +44,17 @@
             transition: transform 0.1s ease;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .cat-area:active {
             transform: scale(0.92);
         }
         .cat-emoji {
-            font-size: 120px;
-            line-height: 1;
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
             filter: drop-shadow(0 10px 20px rgba(255, 200, 0, 0.3));
             transition: filter 0.2s ease;
             display: block;
@@ -72,6 +81,7 @@
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-80px) scale(1.5); }
         }
+
         .stats {
             background: rgba(0,0,0,0.3);
             border-radius: 20px;
@@ -97,6 +107,7 @@
             font-size: 16px;
             color: #ffb347;
         }
+
         .upgrade-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -134,6 +145,55 @@
             color: #a0aec0;
             margin-top: 2px;
         }
+
+        .cats-collection {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .cats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .cat-select {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 6px 2px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            opacity: 0.4;
+        }
+        .cat-select.unlocked {
+            opacity: 1;
+        }
+        .cat-select.active {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.15);
+        }
+        .cat-select img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        .cat-select .cat-name {
+            font-size: 9px;
+            color: #a0aec0;
+            margin-top: 2px;
+            display: block;
+        }
+        .cat-select .cat-price {
+            font-size: 8px;
+            color: #ffd700;
+        }
+
         .referral-section {
             margin-top: 20px;
             padding: 16px;
@@ -157,6 +217,7 @@
         .referral-btn:active {
             background: #4a5568;
         }
+
         .leaderboard-btn {
             position: fixed;
             bottom: 20px;
@@ -186,7 +247,9 @@
             opacity: 0.7;
         }
         @media (max-width: 400px) {
-            .cat-emoji { font-size: 90px; }
+            .cat-emoji { width: 120px; height: 120px; }
+            .cats-grid { grid-template-columns: repeat(6, 1fr); }
+            .cat-select img { width: 30px; height: 30px; }
             .game-container { padding: 16px; }
             .upgrade-grid { gap: 6px; }
             .upgrade-btn { padding: 10px 4px; font-size: 12px; }
@@ -196,11 +259,11 @@
 <body>
 
 <div class="game-container" id="app">
-    <h1 style="font-size: 24px; margin-bottom: 4px;">🐱 Cat Clan Click</h1>
+    <h1>🐱 Cat Clan Click</h1>
     <p style="color: #a0aec0; font-size: 14px; margin-bottom: 8px;">Кликни на кота, чтобы заработать монеты!</p>
 
     <div class="cat-area" id="catArea">
-        <span class="cat-emoji" id="catEmoji">🐈</span>
+        <img src="images/cat1.png" alt="Cat" id="catEmoji" class="cat-emoji">
     </div>
 
     <div class="stats">
@@ -244,6 +307,13 @@
         </button>
     </div>
 
+    <div class="cats-collection">
+        <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">🐱 Коллекция котов</span>
+        <div class="cats-grid" id="catsGrid">
+            <!-- Коты будут добавлены через JavaScript -->
+        </div>
+    </div>
+
     <div class="referral-section">
         <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">👥 Приведи друга</span>
         <p style="font-size: 13px; color: #a0aec0; margin-top: 4px;">Приглашай друзей и получай бонус 50 🐟 за каждого!</p>
@@ -262,11 +332,11 @@
 </div>
 
 <script type="module">
-    // --- Импорт Firebase SDK ---
+    // --- Импорт Firebase ---
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getDatabase, ref, set, get, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-    // --- Твои ключи Firebase (вставлены) ---
+    // --- Конфигурация Firebase ---
     const firebaseConfig = {
         apiKey: "AIzaSyCRJrBDDqKtcU2TQ2vIMRDvWY4CwXLkunw",
         authDomain: "catclanclick.firebaseapp.com",
@@ -277,11 +347,20 @@
         measurementId: "G-JSD29KP67E"
     };
 
-    // --- Инициализация Firebase ---
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // --- Основной код игры ---
+    // --- Массив с 6 котами ---
+    const cats = [
+        { id: 1, name: 'Кот 1', image: 'images/cat1.png', price: 0 },
+        { id: 2, name: 'Кот 2', image: 'images/cat2.png', price: 1000 },
+        { id: 3, name: 'Кот 3', image: 'images/cat3.png', price: 10000 },
+        { id: 4, name: 'Кот 4', image: 'images/cat4.png', price: 100000 },
+        { id: 5, name: 'Кот 5', image: 'images/cat5.png', price: 500000 },
+        { id: 6, name: 'Кот 6', image: 'images/cat6.png', price: 1000000 }
+    ];
+
+    // --- Основной код ---
     (function() {
         let tg = window.Telegram?.WebApp;
         let tgUser = null;
@@ -303,6 +382,7 @@
             console.log('🟢 Игра запущена вне Telegram');
         }
 
+        // --- Состояние игры ---
         let state = {
             coins: 0,
             clickPower: 1,
@@ -311,8 +391,28 @@
             clickLevel: 0,
             passiveLevel: 0,
             catLevel: 0,
-            multiplierLevel: 0
+            multiplierLevel: 0,
+            selectedCat: 1 // ID текущего кота
         };
+
+        // --- Функция для проверки, открыт ли кот ---
+        function isCatUnlocked(cat) {
+            return state.coins >= cat.price;
+        }
+
+        // --- Функция для смены кота ---
+        async function selectCat(catId) {
+            const cat = cats.find(c => c.id === catId);
+            if (!cat) return;
+            if (!isCatUnlocked(cat)) {
+                alert(`Этот кот открывается за ${cat.price} монет!`);
+                return;
+            }
+            state.selectedCat = catId;
+            document.getElementById('catEmoji').src = cat.image;
+            await saveStateToFirebase();
+            renderCats();
+        }
 
         // --- Сохранение в Firebase ---
         async function saveStateToFirebase() {
@@ -327,11 +427,12 @@
                     passive_level: state.passiveLevel,
                     cat_level: state.catLevel,
                     multiplier_level: state.multiplierLevel,
+                    selected_cat: state.selectedCat,
                     lastUpdated: Date.now()
                 });
-                console.log('✅ Данные сохранены в Firebase для:', userId);
+                console.log('✅ Данные сохранены в Firebase');
             } catch (error) {
-                console.error('🔴 Ошибка сохранения в Firebase:', error);
+                console.error('🔴 Ошибка сохранения:', error);
             }
         }
 
@@ -350,14 +451,38 @@
                     state.passiveLevel = data.passive_level || 0;
                     state.catLevel = data.cat_level || 0;
                     state.multiplierLevel = data.multiplier_level || 0;
-                    console.log('✅ Данные загружены из Firebase:', state);
+                    state.selectedCat = data.selected_cat || 1;
+                    console.log('✅ Данные загружены');
                 } else {
-                    console.log('ℹ️ Игрок не найден, создаём нового...');
+                    console.log('ℹ️ Новый игрок');
                     await saveStateToFirebase();
                 }
             } catch (error) {
-                console.error('🔴 Ошибка загрузки из Firebase:', error);
+                console.error('🔴 Ошибка загрузки:', error);
             }
+        }
+
+        // --- Рендер коллекции котов ---
+        function renderCats() {
+            const grid = document.getElementById('catsGrid');
+            grid.innerHTML = '';
+            cats.forEach(cat => {
+                const div = document.createElement('div');
+                div.className = 'cat-select';
+                if (isCatUnlocked(cat)) {
+                    div.classList.add('unlocked');
+                }
+                if (state.selectedCat === cat.id) {
+                    div.classList.add('active');
+                }
+                div.innerHTML = `
+                    <img src="${cat.image}" alt="${cat.name}">
+                    <span class="cat-name">${cat.name}</span>
+                    <span class="cat-price">${cat.price > 0 ? cat.price + ' 🐟' : 'Старт'}</span>
+                `;
+                div.addEventListener('click', () => selectCat(cat.id));
+                grid.appendChild(div);
+            });
         }
 
         // --- Обновление UI ---
@@ -366,6 +491,12 @@
             document.getElementById('clickPowerDisplay').textContent = state.clickPower;
             document.getElementById('passiveIncomeDisplay').textContent = state.passiveIncome;
             document.getElementById('referralCount').textContent = state.referralCount;
+
+            // Проверяем, не открылся ли новый кот
+            const currentCat = cats.find(c => c.id === state.selectedCat);
+            if (currentCat && isCatUnlocked(currentCat)) {
+                document.getElementById('catEmoji').src = currentCat.image;
+            }
 
             const btns = document.querySelectorAll('.upgrade-btn');
             const prices = {
@@ -397,6 +528,8 @@
                 btn.disabled = (state.coins < price);
                 btn.style.opacity = (state.coins < price) ? '0.5' : '1';
             });
+
+            renderCats();
         }
 
         // --- Обработчик клика ---

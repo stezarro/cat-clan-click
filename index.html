@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Cat Clan Click</title>
-    <!-- Подключение Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Иконка кота -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
     <style>
-        /* --- Стили (без изменений) --- */
         * {
             margin: 0;
             padding: 0;
@@ -203,12 +199,10 @@
     <h1 style="font-size: 24px; margin-bottom: 4px;">🐱 Cat Clan Click</h1>
     <p style="color: #a0aec0; font-size: 14px; margin-bottom: 8px;">Кликни на кота, чтобы заработать монеты!</p>
 
-    <!-- Область кота -->
     <div class="cat-area" id="catArea">
         <span class="cat-emoji" id="catEmoji">🐈</span>
     </div>
 
-    <!-- Статистика -->
     <div class="stats">
         <div class="stat-item">
             <span class="stat-label">🐟 Монеты</span>
@@ -224,7 +218,6 @@
         </div>
     </div>
 
-    <!-- Улучшения -->
     <div style="text-align: left; margin-top: 8px;">
         <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">⬆ Улучшения</span>
     </div>
@@ -251,7 +244,6 @@
         </button>
     </div>
 
-    <!-- Реферальная система -->
     <div class="referral-section">
         <span style="font-size: 14px; font-weight: 600; color: #a0aec0;">👥 Приведи друга</span>
         <p style="font-size: 13px; color: #a0aec0; margin-top: 4px;">Приглашай друзей и получай бонус 50 🐟 за каждого!</p>
@@ -262,21 +254,19 @@
         </div>
     </div>
 
-    <!-- Кнопка таблицы лидеров -->
     <button class="leaderboard-btn" id="leaderboardBtn">
         🏆 Лидеры
     </button>
 
-    <!-- Статус подключения к Telegram -->
     <div class="telegram-connect" id="tgStatus">Подключение к Telegram...</div>
 </div>
 
 <script>
-    // --- Подключение к Supabase ---
+    // --- Конфигурация Supabase (твои данные) ---
     const supabaseUrl = 'https://afaqzhatxdluszcssipzi.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmYXF6aGF0eGRsdXpjc3NpcHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0MTcxMjAsImV4cCI6MjEwMDk5MzEyMH0.l0yYOua6v1FZFYlyEKONlTYQZ9cy8qUaEKyM46T92p4';
 
-    // --- Вспомогательные функции для работы с базой данных ---
+    // --- Функции работы с базой данных ---
     async function saveUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
         console.log('Попытка сохранения данных для:', telegramId, 'монет:', coins);
         try {
@@ -510,7 +500,7 @@
         function passiveIncomeLoop() {
             if (state.passiveIncome > 0) {
                 state.coins += state.passiveIncome;
-                saveState(); // Тут тоже нужен await, но из-за setTimeout это не критично
+                saveState();
                 updateUI();
             }
             setTimeout(passiveIncomeLoop, 3000);

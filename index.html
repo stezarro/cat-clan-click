@@ -140,8 +140,16 @@
         {id:5,name:'Кот 5',image:'images/cat5.png',price:500000,bonus:5},
         {id:6,name:'Кот 6',image:'images/cat6.png',price:1000000,bonus:10}
     ];
+    const tasks=[
+        {id:1,icon:'🐟',name:'Накопить 1000 монет',reward:100,check:s=>s.maxCoinsReached>=1000},
+        {id:2,icon:'🐟',name:'Накопить 10 000 монет',reward:500,check:s=>s.maxCoinsReached>=10000},
+        {id:3,icon:'🐟',name:'Накопить 100 000 монет',reward:2000,check:s=>s.maxCoinsReached>=100000},
+        {id:4,icon:'🐱',name:'Открыть Кота 2',reward:300,check:s=>s.selectedCat>=2},
+        {id:5,icon:'🐱',name:'Открыть Кота 3',reward:800,check:s=>s.selectedCat>=3},
+        {id:6,icon:'👥',name:'Пригласить 5 друзей',reward:500,check:s=>s.referralCount>=5}
+    ];
     const BASE_ENERGY=1500;
-    const ENERGY_REGEN_RATE=25; // 1500 / 60 = 25 в минуту
+    const ENERGY_REGEN_RATE=25;
     (function(){console.log('🟢 Cat Clan Click');let tg=window.Telegram?.WebApp;let userId='test_user_123';let userName='Гость';
     if(tg){tg.expand();const user=tg.initDataUnsafe?.user;if(user){userId=user.id.toString();userName=user.first_name||'Игрок';document.getElementById('tgStatus').textContent=`Привет, ${userName}! 🐱`;}else{document.getElementById('tgStatus').textContent='Игра в Telegram (данные не получены)';}}else{document.getElementById('tgStatus').textContent='Тестовый режим (вне Telegram)';}
     let state={coins:0,clickPower:1,passiveIncome:0,referralCount:0,clickLevel:0,passiveLevel:0,multiplierLevel:0,energyLevel:0,selectedCat:1,energy:BASE_ENERGY,lastEnergyUpdate:Date.now(),completedTasks:[],maxCoinsReached:0,boostActive:false,boostEnd:0};

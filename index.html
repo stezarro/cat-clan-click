@@ -16,7 +16,7 @@
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(145deg, #2d1b1b 0%, #1a1a1a 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -52,9 +52,15 @@
             filter: drop-shadow(0 10px 20px rgba(255, 200, 0, 0.3));
             transition: filter 0.2s ease;
             display: block;
+            animation: bounce 2s infinite ease-in-out, glow 1.5s infinite alternate;
         }
-        .cat-emoji:hover {
-            filter: drop-shadow(0 0 25px rgba(255, 200, 0, 0.6));
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px orange); }
+            to { filter: drop-shadow(0 0 20px gold); }
         }
         .click-effect {
             position: absolute;
@@ -93,7 +99,7 @@
         .stat-value {
             font-weight: 600;
             font-size: 16px;
-            color: #ffd700;
+            color: #ffb347;
         }
 
         .upgrade-grid {
@@ -103,8 +109,8 @@
             margin-top: 16px;
         }
         .upgrade-btn {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 165, 0, 0.15);
+            border: 1px solid #ff8c00;
             border-radius: 16px;
             padding: 14px 8px;
             color: white;
@@ -118,6 +124,7 @@
             word-break: break-word;
         }
         .upgrade-btn:active {
+            background: rgba(255, 165, 0, 0.3);
             transform: scale(0.95);
         }
         .upgrade-btn .price {
@@ -187,41 +194,12 @@
             opacity: 0.7;
         }
 
-        /* Адаптация для маленьких экранов */
         @media (max-width: 400px) {
             .cat-emoji { font-size: 90px; }
             .game-container { padding: 16px; }
             .upgrade-grid { gap: 6px; }
             .upgrade-btn { padding: 10px 4px; font-size: 12px; }
         }
-
-        body {
-    background: linear-gradient(145deg, #2d1b1b 0%, #1a1a1a 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.cat-emoji {
-    animation: bounce 2s infinite ease-in-out, glow 1.5s infinite alternate;
-}
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-@keyframes glow {
-    from { filter: drop-shadow(0 0 5px orange); }
-    to { filter: drop-shadow(0 0 20px gold); }
-}
-.stat-value {
-    color: #ffb347;
-}
-.upgrade-btn {
-    background: rgba(255, 165, 0, 0.15);
-    border-color: #ff8c00;
-    transition: all 0.2s ease;
-}
-.upgrade-btn:active {
-    background: rgba(255, 165, 0, 0.3);
-    transform: scale(0.95);
-}
     </style>
 </head>
 <body>
@@ -305,6 +283,7 @@
 
     // --- Вспомогательные функции для работы с базой данных ---
     async function saveUserData(telegramId, coins, clickPower, passiveIncome, referralCount) {
+        console.log('Попытка сохранения данных для:', telegramId, 'монет:', coins);
         try {
             const response = await fetch(`${supabaseUrl}/rest/v1/players`, {
                 method: 'POST',
@@ -323,10 +302,13 @@
             });
             if (!response.ok) {
                 if (response.status === 409) {
+                    console.log('Конфликт, обновляем данные...');
                     await updateUserData(telegramId, coins, clickPower, passiveIncome, referralCount);
                 } else {
-                    throw new Error('Ошибка сохранения');
+                    throw new Error(`Ошибка сохранения: ${response.status}`);
                 }
+            } else {
+                console.log('Данные успешно сохранены!');
             }
         } catch (error) {
             console.error('Ошибка сохранения в Supabase:', error);
@@ -349,7 +331,8 @@
                     referral_count: referralCount
                 })
             });
-            if (!response.ok) throw new Error('Ошибка обновления');
+            if (!response.ok) throw new Error(`Ошибка обновления: ${response.status}`);
+            console.log('Данные обновлены!');
         } catch (error) {
             console.error('Ошибка обновления в Supabase:', error);
         }
@@ -365,12 +348,14 @@
             });
             if (!response.ok) {
                 if (response.status === 404) {
+                    console.log('Игрок не найден, будет создан новый.');
                     return null;
                 }
-                throw new Error('Ошибка загрузки');
+                throw new Error(`Ошибка загрузки: ${response.status}`);
             }
             const data = await response.json();
             if (data && data.length > 0) {
+                console.log('Данные загружены:', data[0]);
                 return data[0];
             }
             return null;
@@ -411,20 +396,22 @@
         };
 
         async function initializeGame() {
+            console.log('Загрузка данных для пользователя:', userId);
             const playerData = await loadUserData(userId);
             if (playerData) {
                 state.coins = playerData.coins || 0;
                 state.clickPower = playerData.click_power || 1;
                 state.passiveIncome = playerData.passive_income || 0;
                 state.referralCount = playerData.referral_count || 0;
+                console.log('Состояние загружено:', state);
             }
             updateUI();
             passiveIncomeLoop();
-            console.log('Игра загружена для пользователя:', userId);
         }
 
-        function saveState() {
-            saveUserData(userId, state.coins, state.clickPower, state.passiveIncome, state.referralCount);
+        async function saveState() {
+            console.log('Сохранение состояния:', state);
+            await saveUserData(userId, state.coins, state.clickPower, state.passiveIncome, state.referralCount);
         }
 
         function updateUI() {
@@ -465,10 +452,10 @@
             });
         }
 
-        function handleCatClick(e) {
+        async function handleCatClick(e) {
             const gain = state.clickPower * (1 + state.multiplierLevel * 0.5);
             state.coins += Math.floor(gain);
-            saveState();
+            await saveState();
             updateUI();
 
             const catArea = document.getElementById('catArea');
@@ -489,7 +476,7 @@
             }
         }
 
-        function buyUpgrade(type) {
+        async function buyUpgrade(type) {
             const prices = {
                 click: Math.floor(10 * Math.pow(1.5, state.clickLevel)),
                 passive: Math.floor(50 * Math.pow(1.6, state.passiveLevel)),
@@ -520,7 +507,7 @@
                     state.multiplierLevel++;
                     break;
             }
-            saveState();
+            await saveState();
             updateUI();
             if (tg) tg.HapticFeedback.impactOccurred('medium');
         }
@@ -528,7 +515,7 @@
         function passiveIncomeLoop() {
             if (state.passiveIncome > 0) {
                 state.coins += state.passiveIncome;
-                saveState();
+                saveState(); // Здесь тоже можно сделать await, но раз в 3 секунды это не критично
                 updateUI();
             }
             setTimeout(passiveIncomeLoop, 3000);
@@ -583,7 +570,5 @@
         document.addEventListener('DOMContentLoaded', init);
     })();
 </script>
-</script>
-
 </body>
 </html>

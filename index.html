@@ -16,7 +16,6 @@
         .energy-display{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);padding:6px 14px;border-radius:30px}
         .energy-icon{font-size:18px}
         .energy-text{font-size:16px;font-weight:600;color:#8be9fd}
-        .energy-max{font-size:13px;color:#6c7a89}
         .profit-hour{text-align:center;padding:8px 0 12px;font-size:13px;color:#6c7a89}
         .profit-hour span{color:#ffd700;font-weight:600;font-size:16px}
         .cat-area{position:relative;display:flex;justify-content:center;align-items:center;padding:10px 0;cursor:pointer;transition:transform .08s ease}
@@ -86,13 +85,13 @@
 <div class="game-container" id="app">
     <div class="top-panel">
         <div class="coin-display"><span class="coin-icon">🐟</span><span class="coin-value" id="coinsDisplay">0</span></div>
-        <div class="energy-display"><span class="energy-icon">⚡</span><span class="energy-text" id="energyCurrent">1500</span><span class="energy-max">/ 1500</span></div>
+        <div class="energy-display"><span class="energy-icon">⚡</span><span class="energy-text" id="energyCurrent">15000</span></div>
     </div>
     <div class="profit-hour">Прибыль в час: <span id="profitPerHour">0</span> 🐟</div>
 
     <div id="mainSection" class="main-section">
         <div class="cat-area" id="catArea"><img src="images/cat1.png" alt="Cat" id="catEmoji"></div>
-        <div class="energy-bar-wrap"><div class="energy-bar" id="energyBar" style="width:100%"></div><span class="energy-bar-text" id="energyBarText">1500/1500</span></div>
+        <div class="energy-bar-wrap"><div class="energy-bar" id="energyBar" style="width:100%"></div><span class="energy-bar-text" id="energyBarText">15000/15000</span></div>
         <div class="bonus-grid">
             <div class="bonus-item"><span class="label">Ежедневная награда</span><span class="value">+50</span><span class="timer">24:00</span></div>
             <div class="bonus-item"><span class="label">Ежедневный шифр</span><span class="value">+20</span><span class="timer">12:00</span></div>
@@ -148,18 +147,17 @@
         {id:5,icon:'🐱',name:'Открыть Кота 3',reward:800,check:s=>s.selectedCat>=3},
         {id:6,icon:'👥',name:'Пригласить 5 друзей',reward:500,check:s=>s.referralCount>=5}
     ];
-    const BASE_ENERGY=1500;
+    const BASE_ENERGY=15000;
     (function(){console.log('🟢 Cat Clan Click');let tg=window.Telegram?.WebApp;let userId='test_user_123';let userName='Гость';
     if(tg){tg.expand();const user=tg.initDataUnsafe?.user;if(user){userId=user.id.toString();userName=user.first_name||'Игрок';document.getElementById('tgStatus').textContent=`Привет, ${userName}! 🐱`;}else{document.getElementById('tgStatus').textContent='Игра в Telegram (данные не получены)';}}else{document.getElementById('tgStatus').textContent='Тестовый режим (вне Telegram)';}
     let state={coins:0,clickPower:1,passiveIncome:0,referralCount:0,clickLevel:0,passiveLevel:0,multiplierLevel:0,energyLevel:0,selectedCat:1,energy:BASE_ENERGY,lastEnergyUpdate:Date.now(),completedTasks:[],maxCoinsReached:0,boostActive:false,boostEnd:0};
     let clickEffectTimeout=null;
-    // --- Звуки (Web Audio API) ---
     let audioCtx=null;
     function initAudio(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();}}
     function playClickSound(){try{initAudio();const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.frequency.value=800;gain.gain.setValueAtTime(0.1,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.08);osc.start();osc.stop(audioCtx.currentTime+0.08);}catch(e){}}
     function playUpgradeSound(){try{initAudio();const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.frequency.value=500;gain.gain.setValueAtTime(0.1,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.15);osc.start();osc.stop(audioCtx.currentTime+0.15);}catch(e){}}
     function playCatSound(){try{initAudio();const osc=audioCtx.createOscillator();const gain=audioCtx.createGain();osc.connect(gain);gain.connect(audioCtx.destination);osc.frequency.value=400;gain.gain.setValueAtTime(0.1,audioCtx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.3);osc.start();osc.stop(audioCtx.currentTime+0.3);}catch(e){}}
-    function getMaxEnergy(){return BASE_ENERGY*Math.pow(2,state.selectedCat-1)+state.energyLevel*100;}
+    function getMaxEnergy(){return BASE_ENERGY*Math.pow(2,state.selectedCat-1)+state.energyLevel*1000;}
     function getRegenRate(){const maxE=getMaxEnergy();return maxE/15;}
     function regenEnergy(){const now=Date.now();const maxE=getMaxEnergy();const elapsed=(now-state.lastEnergyUpdate)/1000/60;state.energy=Math.min(maxE,state.energy+elapsed*getRegenRate());state.lastEnergyUpdate=now;updateEnergyUI();}
     function updateEnergyUI(){const maxE=getMaxEnergy();const current=Math.floor(state.energy);document.getElementById('energyCurrent').textContent=current;document.getElementById('energyBarText').textContent=`${current}/${maxE}`;document.getElementById('energyBar').style.width=`${(current/maxE)*100}%`;}

@@ -83,7 +83,6 @@
         .telegram-connect{text-align:center;font-size:11px;color:#4a5568;margin-top:8px}
         .main-section{display:block}
         .main-section.hidden{display:none}
-        /* Модальное окно WORDLE */
         .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);z-index:1000;justify-content:center;align-items:center}
         .modal.active{display:flex}
         .modal-content{background:#1a1a2e;border-radius:28px;padding:24px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;border:1px solid rgba(255,255,255,.1)}
@@ -169,13 +168,9 @@
     <div class="telegram-connect" id="tgStatus">Подключение к Telegram...</div>
 </div>
 
-<!-- Модальное окно WORDLE -->
 <div class="modal" id="wordleModal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3>🔐 Ежедневный шифр</h3>
-            <button class="modal-close" id="wordleCloseBtn">✕</button>
-        </div>
+        <div class="modal-header"><h3>🔐 Ежедневный шифр</h3><button class="modal-close" id="wordleCloseBtn">✕</button></div>
         <div id="wordleGrid" class="wordle-grid"></div>
         <div id="wordleMessage" class="wordle-message"></div>
         <div id="wordleKeyboard" class="wordle-keyboard"></div>
@@ -187,32 +182,17 @@
     import { getDatabase, ref, set, get, update, push } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
     const firebaseConfig={apiKey:"AIzaSyCRJrBDDqKtcU2TQ2vIMRDvWY4CwXLkunw",authDomain:"catclanclick.firebaseapp.com",projectId:"catclanclick",storageBucket:"catclanclick.firebasestorage.app",messagingSenderId:"530270389222",appId:"1:530270389222:web:12cdd77fbb30978cf2cc27",measurementId:"G-JSD29KP67E"};
     const app=initializeApp(firebaseConfig);const db=getDatabase(app);
-    const cats=[
-        {id:1,name:'Кот 1',image:'images/cat1.png',price:0,bonus:1},
-        {id:2,name:'Кот 2',image:'images/cat2.png',price:1000,bonus:1.5},
-        {id:3,name:'Кот 3',image:'images/cat3.png',price:10000,bonus:2},
-        {id:4,name:'Кот 4',image:'images/cat4.png',price:100000,bonus:3},
-        {id:5,name:'Кот 5',image:'images/cat5.png',price:500000,bonus:5},
-        {id:6,name:'Кот 6',image:'images/cat6.png',price:1000000,bonus:10}
-    ];
-    const tasks=[
-        {id:1,icon:'🐟',name:'Накопить 1000 монет',reward:100,check:s=>s.maxCoinsReached>=1000},
-        {id:2,icon:'🐟',name:'Накопить 10 000 монет',reward:500,check:s=>s.maxCoinsReached>=10000},
-        {id:3,icon:'🐟',name:'Накопить 100 000 монет',reward:2000,check:s=>s.maxCoinsReached>=100000},
-        {id:4,icon:'🐱',name:'Открыть Кота 2',reward:300,check:s=>s.selectedCat>=2},
-        {id:5,icon:'🐱',name:'Открыть Кота 3',reward:800,check:s=>s.selectedCat>=3},
-        {id:6,icon:'👥',name:'Пригласить 5 друзей',reward:500,check:s=>s.referralCount>=5}
-    ];
+    const cats=[{id:1,name:'Кот 1',image:'images/cat1.png',price:0,bonus:1},{id:2,name:'Кот 2',image:'images/cat2.png',price:1000,bonus:1.5},{id:3,name:'Кот 3',image:'images/cat3.png',price:10000,bonus:2},{id:4,name:'Кот 4',image:'images/cat4.png',price:100000,bonus:3},{id:5,name:'Кот 5',image:'images/cat5.png',price:500000,bonus:5},{id:6,name:'Кот 6',image:'images/cat6.png',price:1000000,bonus:10}];
+    const tasks=[{id:1,icon:'🐟',name:'Накопить 1000 монет',reward:100,check:s=>s.maxCoinsReached>=1000},{id:2,icon:'🐟',name:'Накопить 10 000 монет',reward:500,check:s=>s.maxCoinsReached>=10000},{id:3,icon:'🐟',name:'Накопить 100 000 монет',reward:2000,check:s=>s.maxCoinsReached>=100000},{id:4,icon:'🐱',name:'Открыть Кота 2',reward:300,check:s=>s.selectedCat>=2},{id:5,icon:'🐱',name:'Открыть Кота 3',reward:800,check:s=>s.selectedCat>=3},{id:6,icon:'👥',name:'Пригласить 5 друзей',reward:500,check:s=>s.referralCount>=5}];
     const BASE_ENERGY=15000;
-    // --- WORDLE ---
-    const WORD_LIST = ['apple', 'brain', 'crane', 'drink', 'eagle', 'flame', 'grape', 'heart', 'ivory', 'joker', 'koala', 'lemon', 'mango', 'night', 'oasis', 'piano', 'queen', 'river', 'stone', 'tiger', 'ultra', 'vivid', 'water', 'xenon', 'youth', 'zebra'];
+    const WORD_LIST = ['APPLE','BRAIN','CRANE','DRINK','EAGLE','FLAME','GRAPE','HEART','IVORY','JOKER','KOALA','LEMON','MANGO','NIGHT','OASIS','PIANO','QUEEN','RIVER','STONE','TIGER','ULTRA','VIVID','WATER','XENON','YOUTH','ZEBRA'];
     let wordleState = {answer: '', guesses: [], currentGuess: '', gameOver: false, won: false, usedKeys: {}};
     let wordleActive = false;
     function initWordle() {
         const today = new Date().toDateString();
         const seed = today.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
         const idx = seed % WORD_LIST.length;
-        wordleState.answer = WORD_LIST[idx].toUpperCase();
+        wordleState.answer = WORD_LIST[idx];
         wordleState.guesses = [];
         wordleState.currentGuess = '';
         wordleState.gameOver = false;
@@ -252,7 +232,6 @@
             }
             grid.appendChild(row);
         }
-        // Клавиатура
         keyboard.innerHTML='';
         const rows=['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'];
         rows.forEach((row,ri)=>{
@@ -282,7 +261,7 @@
             keyboard.appendChild(div);
         });
         if(wordleState.gameOver){
-            msg.textContent=wordleState.won?'🎉 Вы угадали! ×2 на 30 секунд!':'😔 Слово было: '+wordleState.answer;
+            msg.textContent=wordleState.won?'🎉 Вы угадали! +10000 монет!':'😔 Слово было: '+wordleState.answer;
             msg.className='wordle-message'+(wordleState.won?'':' lose');
         }else{
             msg.textContent='Угадайте слово из 5 букв';
@@ -303,10 +282,9 @@
             }
             const guess=wordleState.currentGuess;
             const ans=wordleState.answer;
-            // Проверка букв
+            const used={};
             const guessArr=guess.split('');
             const ansArr=ans.split('');
-            const used={};
             guessArr.forEach((l,i)=>{
                 if(l===ansArr[i]){
                     used[l]=used[l]||{};
@@ -345,7 +323,7 @@
             return;
         }
         if(wordleState.currentGuess.length<5){
-            wordleState.currentGuess+=key.toUpperCase();
+            wordleState.currentGuess+=key;
             renderWordle();
         }
     }
@@ -371,9 +349,9 @@
         document.getElementById('wordleModal').classList.remove('active');
     }
     document.getElementById('wordleCloseBtn').addEventListener('click',closeWordle);
-    document.getElementById('dailyCipher').addEventListener('click',()=>{
-        if(state.dailyCipher>0&&Date.now()-state.dailyCipher<24*60*60*1000){
-            tg.showAlert('Уже получено! Ждите завтра.');
+    document.getElementById('dailyCipher').addEventListener('click', function() {
+        if (state.dailyCipher > 0 && Date.now() - state.dailyCipher < 24 * 60 * 60 * 1000) {
+            if (tg) tg.showAlert('🔐 Уже получено! Ждите завтра.');
             return;
         }
         openWordle();

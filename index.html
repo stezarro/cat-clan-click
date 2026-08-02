@@ -349,13 +349,19 @@
         document.getElementById('wordleModal').classList.remove('active');
     }
     document.getElementById('wordleCloseBtn').addEventListener('click',closeWordle);
-    document.getElementById('dailyCipher').addEventListener('click', function() {
+    
+    // --- ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ДЛЯ dailyCipher ---
+    document.getElementById('dailyCipher').addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('🔐 Кнопка "Ежедневный шифр" нажата');
+        
         if (state.dailyCipher > 0 && Date.now() - state.dailyCipher < 24 * 60 * 60 * 1000) {
             if (tg) tg.showAlert('🔐 Уже получено! Ждите завтра.');
             return;
         }
         openWordle();
     });
+    
     // --- Остальной код игры ---
     (function(){console.log('🟢 Cat Clan Click');let tg=window.Telegram?.WebApp;let userId='test_user_123';let userName='Гость';
     if(tg){tg.expand();const user=tg.initDataUnsafe?.user;if(user){userId=user.id.toString();userName=user.first_name||'Игрок';document.getElementById('tgStatus').textContent=`Привет, ${userName}! 🐱`;}else{document.getElementById('tgStatus').textContent='Игра в Telegram (данные не получены)';}}else{document.getElementById('tgStatus').textContent='Тестовый режим (вне Telegram)';}

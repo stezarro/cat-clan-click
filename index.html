@@ -350,19 +350,6 @@
     }
     document.getElementById('wordleCloseBtn').addEventListener('click',closeWordle);
     
-    // --- ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ДЛЯ dailyCipher ---
-    document.getElementById('dailyCipher').addEventListener('click', function(e) {
-        e.stopPropagation();
-        console.log('🔐 Кнопка "Ежедневный шифр" нажата');
-        
-        if (state.dailyCipher > 0 && Date.now() - state.dailyCipher < 24 * 60 * 60 * 1000) {
-            if (tg) tg.showAlert('🔐 Уже получено! Ждите завтра.');
-            return;
-        }
-        openWordle();
-    });
-    
-    // --- Остальной код игры ---
     (function(){console.log('🟢 Cat Clan Click');let tg=window.Telegram?.WebApp;let userId='test_user_123';let userName='Гость';
     if(tg){tg.expand();const user=tg.initDataUnsafe?.user;if(user){userId=user.id.toString();userName=user.first_name||'Игрок';document.getElementById('tgStatus').textContent=`Привет, ${userName}! 🐱`;}else{document.getElementById('tgStatus').textContent='Игра в Telegram (данные не получены)';}}else{document.getElementById('tgStatus').textContent='Тестовый режим (вне Telegram)';}
     let state={coins:0,clickPower:1,passiveIncome:0,referralCount:0,clickLevel:0,passiveLevel:0,multiplierLevel:0,energyLevel:0,selectedCat:1,energy:BASE_ENERGY,lastEnergyUpdate:Date.now(),completedTasks:[],maxCoinsReached:0,clanId:null,dailyReward:0,dailyCipher:0,dailyCombo:0,dailyMinigame:0};
@@ -404,6 +391,19 @@
     try{const snap=await get(ref(db,'clans/'+state.clanId));if(!snap.exists()){status.textContent='Клан не найден.';return;}const clan=snap.val();status.textContent=`Клан: ${clan.name} (ID: ${state.clanId})`;let html='<div style="font-weight:600;margin:8px 0;">Участники:</div>';const members=clan.members||{};Object.keys(members).forEach(id=>{const isLeader=clan.leader===id;html+=`<div class="clan-member"><span>${isLeader?'👑 ':''}${id}</span><span>${members[id]||0} 🐟</span></div>`;});membersDiv.innerHTML=html;if(clan.leader===userId){transferDiv.style.display='block';document.getElementById('transferBtn').onclick=async function(){const amount=parseInt(document.getElementById('transferAmount').value);if(!amount||amount<=0){tg.showAlert('Введите сумму');return;}if(amount>state.coins){tg.showAlert('Не хватает монет');return;}const memberIds=Object.keys(clan.members);if(memberIds.length<2){tg.showAlert('Нет других участников');return;}const target=memberIds.find(id=>id!==userId);if(!target){tg.showAlert('Нет получателя');return;}state.coins-=amount;const targetRef=ref(db,'users/'+target+'/coins');const targetSnap=await get(targetRef);const targetCoins=targetSnap.val()||0;await set(targetRef,targetCoins+amount);await saveState();updateUI();tg.showAlert(`Передано ${amount} монет игроку ${target}`);};}else{transferDiv.style.display='none';}}catch(e){console.error(e);status.textContent='Ошибка загрузки клана';}}
     document.getElementById('createClanBtn').addEventListener('click',async function(){const name=document.getElementById('clanNameInput').value.trim();if(!name){tg.showAlert('Введите название');return;}if(state.clanId){tg.showAlert('Вы уже в клане');return;}try{const newRef=push(ref(db,'clans'));const clanId=newRef.key;await set(newRef,{name:name,leader:userId,members:{[userId]:state.coins},created:Date.now()});state.clanId=clanId;await saveState();updateUI();tg.showAlert(`Клан "${name}" создан! ID: ${clanId}`);}catch(e){console.error(e);}});
     document.getElementById('joinClanBtn').addEventListener('click',async function(){const id=document.getElementById('clanIdInput').value.trim();if(!id){tg.showAlert('Введите ID клана');return;}if(state.clanId){tg.showAlert('Вы уже в клане');return;}try{const snap=await get(ref(db,'clans/'+id));if(!snap.exists()){tg.showAlert('Клан не найден');return;}const clan=snap.val();await set(ref(db,'clans/'+id+'/members/'+userId),state.coins);state.clanId=id;await saveState();updateUI();tg.showAlert(`Вы вступили в клан "${clan.name}"`);}catch(e){console.error(e);}});
+    
+    // --- ИСПРАВЛЕННЫЙ ОБРАБОТЧИК (теперь внутри функции, где виден state) ---
+    document.getElementById('dailyCipher').addEventListener('click', function(e) {
+        e.stopPropagation();
+        console.log('🔐 Кнопка "Ежедневный шифр" нажата');
+        
+        if (state.dailyCipher > 0 && Date.now() - state.dailyCipher < 24 * 60 * 60 * 1000) {
+            if (tg) tg.showAlert('🔐 Уже получено! Ждите завтра.');
+            return;
+        }
+        openWordle();
+    });
+    
     (async function init(){await loadState();updateUI();passiveIncomeLoop();document.getElementById('catArea').addEventListener('click',handleCatClick);document.getElementById('catArea').addEventListener('touchstart',function(e){e.preventDefault();const touch=e.touches[0];handleCatClick({clientX:touch.clientX,clientY:touch.clientY});});document.querySelectorAll('.upgrade-card').forEach(card=>{card.addEventListener('click',function(){buyUpgrade(this.dataset.upgrade);});});document.getElementById('referralBtn').addEventListener('click',function(){const link=document.getElementById('referralLink').textContent;if(tg)tg.showAlert(`Ваша реферальная ссылка: ${link}`);else navigator.clipboard.writeText(link).then(()=>alert('Ссылка скопирована!')).catch(()=>prompt('Скопируйте ссылку вручную:',link));});document.getElementById('copyReferralBtn').addEventListener('click',function(){const link=document.getElementById('referralLink').textContent;navigator.clipboard.writeText(link).then(()=>{if(tg)tg.showAlert('Ссылка скопирована!');else alert('Ссылка скопирована!');}).catch(()=>prompt('Скопируйте ссылку вручную:',link));});setupNavigation();console.log('✅ Игра готова!');})();})();
 </script>
 </body>
